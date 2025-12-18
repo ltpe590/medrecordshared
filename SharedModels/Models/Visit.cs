@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 
-namespace MedRecordWebApi.Models
+namespace SharedModels.Models
 {
     public class Visit
     {

@@ -1,0 +1,107 @@
+﻿<Window x:Class="MedRecordsWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Patient Visit Management" Height="600" Width="800">
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" MinHeight="100"/>
+			<RowDefinition Height="5"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+
+		<!-- Top Area: Collapsible History Display -->
+		<Expander Grid.Row="0"
+                  Header="Previous Visits History (Click to Collapse/Expand)"
+                  IsExpanded="True"
+                  Background="#f0f0f0"
+                  Padding="5">
+			<ScrollViewer VerticalScrollBarVisibility="Auto">
+				<TextBlock x:Name="HistoryTextBlock"
+                           TextWrapping="Wrap"
+                           Padding="10"
+                           FontSize="14"
+                           Text="[Patient Visit History will appear here]"/>
+			</ScrollViewer>
+		</Expander>
+
+		<!-- GridSplitter -->
+		<GridSplitter Grid.Row="1"
+                      HorizontalAlignment="Stretch"
+                      Background="Gray"
+                      ShowsPreview="True"
+                      Height="5"/>
+
+		<!-- Bottom Area: Login and Data Entry -->
+		<Border Grid.Row="2" Padding="10" Background="White">
+			<StackPanel>
+				<TextBlock Text="Patient/Login Management Area"
+                           FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+
+				<!-- Login Controls -->
+				<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+					<Label Content="API URL:" VerticalAlignment="Center"/>
+					<TextBox x:Name="TxtApiUrl"
+                             Text="https://localhost:7048"
+                             Width="200"
+                             Margin="5,0,10,0"/>
+					<Button x:Name="TestConnectionButton"
+                            Content="Test Connection"
+                            Click="TestConnectionButton_Click"
+                            Padding="5"/>
+				</StackPanel>
+
+				<Label Content="Username:"/>
+				<TextBox x:Name="TxtUsername" Margin="0,0,0,5"/>
+				<Label Content="Password:"/>
+				<PasswordBox x:Name="TxtPassword" Margin="0,0,0,10"/>
+				<Button x:Name="LoginButton"
+                        Content="Login"
+                        HorizontalAlignment="Left"
+                        Padding="10,5"
+                        Margin="0,0,0,10"
+                        Click="LoginButton_Click"/>
+
+				<!-- Patient Selection -->
+				<Label Content="Select Patient:" Margin="0,10,0,5"/>
+				<ComboBox x:Name="PatientComboBox"
+                          Margin="0,0,0,10"
+                          IsEnabled="False"
+                          SelectionChanged="PatientComboBox_SelectionChanged"/>
+
+				<!-- Diagnosis Input -->
+				<Label Content="Diagnosis:"/>
+				<TextBox x:Name="TxtDiagnosis"
+                         Margin="0,0,0,5"
+                         IsEnabled="False"
+                         Height="60"
+                         TextWrapping="Wrap"/>
+
+				<!-- Notes Input -->
+				<Label Content="Notes:"/>
+				<TextBox x:Name="TxtNotes"
+                         Margin="0,0,0,10"
+                         IsEnabled="False"
+                         Height="100"
+                         TextWrapping="Wrap"/>
+
+				<!-- Save Button -->
+				<Button x:Name="SaveButton"
+                        Content="Save Visit"
+                        HorizontalAlignment="Left"
+                        Padding="10,5"
+                        IsEnabled="False"
+                        Click="SaveButton_Click"/>
+
+				<!-- Status Bar -->
+				<TextBlock x:Name="StatusText"
+                           Margin="0,10,0,0"
+                           Foreground="Gray"
+                           FontStyle="Italic"/>
+			</StackPanel>
+		</Border>
+	</Grid>
+</Window>

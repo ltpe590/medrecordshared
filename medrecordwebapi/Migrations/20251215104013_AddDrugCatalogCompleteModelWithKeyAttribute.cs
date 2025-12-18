@@ -40,7 +40,7 @@ namespace Medrecordwebapi.Migrations
                     DrugId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     BrandName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Compositin = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Composition = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Form = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DosageStrength = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Frequency = table.Column<string>(type: "nvarchar(max)", nullable: false)

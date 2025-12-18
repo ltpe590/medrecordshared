@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations; // <-- Add this using statement if missing
 
-namespace MedRecordWebApi.Models
+namespace SharedModels.Models
 {
     public class TestCatalog
     {

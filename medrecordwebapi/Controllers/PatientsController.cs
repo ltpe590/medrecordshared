@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MedRecordWebApi.Data;
-using MedRecordWebApi.Models;
+using SharedModels.Models;
 
 namespace MedRecordWebApi.Controllers
 {

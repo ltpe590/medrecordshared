@@ -2,7 +2,7 @@
 using System.Collections.Generic; // Required for ICollection
 using System.ComponentModel.DataAnnotations; // Required for [Required] and [DataType]
 
-namespace MedRecordWebApi.Models
+namespace SharedModels.Models
 {
     public class Patient
     {

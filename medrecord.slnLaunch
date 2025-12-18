@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "medrecordwebapi\\Medrecordwebapi.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "MedRecordsWPF\\MedRecordsWPF.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

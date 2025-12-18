@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MedRecordWebApi.Models
+namespace SharedModels.Models
 {
     public class DrugCatalog
     {

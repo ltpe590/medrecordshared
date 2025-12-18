@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace MedRecordWebApi.Models
+namespace SharedModels.Models
 {
     public class Doctor
     {

@@ -1,16 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MedRecordWebApi.Models; // Or medrecordwebapi.Models if your project name is lowercase
+using SharedModels.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
-namespace MedRecordWebApi.Data // Use your actual project name here
+namespace MedRecordWebApi.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
-
-        // Define the tables (DbSets) for our database
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Visit> Visits { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
