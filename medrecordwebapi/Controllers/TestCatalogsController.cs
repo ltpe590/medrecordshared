@@ -3,10 +3,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MedRecordWebApi.Data;
 using SharedModels.Models;
+using Medrecord.Data;
 
-namespace MedRecordWebApi.Controllers
+namespace Medrecord.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

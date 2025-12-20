@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration; // Add this using statement
 using System; // Add this using statement
-using System.Collections.Generic; // Add this using statement
+using System.Collections.Generic;
 
-namespace MedRecordWebApi.Controllers
+namespace Medrecord.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

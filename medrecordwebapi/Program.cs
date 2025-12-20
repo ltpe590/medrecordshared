@@ -1,4 +1,3 @@
-using MedRecordWebApi.Data;
 using SharedModels.Models;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Text;
+using Medrecord.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

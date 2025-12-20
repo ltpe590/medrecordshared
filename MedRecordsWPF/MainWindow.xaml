@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Patient Visit Management" Height="600" Width="800">
+        Title="Patient Visit Management" Height="700" Width="900">
 
 	<Grid>
 		<Grid.RowDefinitions>
@@ -35,73 +35,305 @@
                       ShowsPreview="True"
                       Height="5"/>
 
-		<!-- Bottom Area: Login and Data Entry -->
-		<Border Grid.Row="2" Padding="10" Background="White">
-			<StackPanel>
-				<TextBlock Text="Patient/Login Management Area"
-                           FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+		<!-- Bottom Area: Dynamic Content -->
+		<Grid Grid.Row="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
 
-				<!-- Login Controls -->
-				<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-					<Label Content="API URL:" VerticalAlignment="Center"/>
-					<TextBox x:Name="TxtApiUrl"
-                             Text="https://localhost:7048"
-                             Width="200"
-                             Margin="5,0,10,0"/>
-					<Button x:Name="TestConnectionButton"
-                            Content="Test Connection"
-                            Click="TestConnectionButton_Click"
-                            Padding="5"/>
+			<!-- Left Panel: Login Section (Visible before login) -->
+			<Border x:Name="LoginSection"
+                    Grid.Column="0"
+                    Padding="20"
+                    Background="White"
+                    BorderBrush="#e0e0e0"
+                    BorderThickness="1">
+				<StackPanel>
+					<TextBlock Text="Login to Medical Records System"
+                               FontWeight="Bold"
+                               FontSize="18"
+                               Margin="0,0,0,20"/>
+
+					<!-- API Connection -->
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+						<Label Content="API URL:" VerticalAlignment="Center" Width="80"/>
+						<TextBox x:Name="TxtApiUrl"
+                                 Text="https://localhost:7287"
+                                 Width="250"
+                                 Margin="5,0,10,0"/>
+						<Button x:Name="TestConnectionButton"
+                                Content="Test Connection"
+                                Click="TestConnectionButton_Click"
+                                Padding="5"/>
+					</StackPanel>
+
+					<!-- Login Form -->
+					<Label Content="Username:"/>
+					<TextBox x:Name="TxtUsername"
+                             Margin="0,0,0,5"/>
+					<Label Content="Password:"/>
+					<PasswordBox x:Name="TxtPassword"
+                                 Margin="0,0,0,15"/>
+
+					<Button x:Name="LoginButton"
+                            Content="Login"
+                            Width="100"
+                            Height="35"
+                            FontWeight="Bold"
+                            Background="#0078D4"
+                            Foreground="White"
+                            Click="LoginButton_Click"/>
+
+					<TextBlock x:Name="StatusText"
+                               Margin="0,15,0,0"
+                               Foreground="Gray"
+                               FontStyle="Italic"/>
 				</StackPanel>
+			</Border>
 
-				<Label Content="Username:"/>
-				<TextBox x:Name="TxtUsername" Margin="0,0,0,5"/>
-				<Label Content="Password:"/>
-				<PasswordBox x:Name="TxtPassword" Margin="0,0,0,10"/>
-				<Button x:Name="LoginButton"
-                        Content="Login"
-                        HorizontalAlignment="Left"
-                        Padding="10,5"
-                        Margin="0,0,0,10"
-                        Click="LoginButton_Click"/>
+			<!-- Middle Divider (Visible before login) -->
+			<GridSplitter x:Name="MiddleDivider"
+                          Grid.Column="1"
+                          Width="5"
+                          Background="LightGray"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"/>
 
-				<!-- Patient Selection -->
-				<Label Content="Select Patient:" Margin="0,10,0,5"/>
-				<ComboBox x:Name="PatientComboBox"
-                          Margin="0,0,0,10"
-                          IsEnabled="False"
-                          SelectionChanged="PatientComboBox_SelectionChanged"/>
+			<!-- Right Panel: Patient Registration (Visible before login) -->
+			<Border x:Name="RegisterSection"
+                    Grid.Column="2"
+                    Padding="20"
+                    Background="White"
+                    BorderBrush="#e0e0e0"
+                    BorderThickness="1">
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<StackPanel>
+						<TextBlock Text="Register New Patient"
+                                   FontWeight="Bold"
+                                   FontSize="18"
+                                   Margin="0,0,0,20"/>
 
-				<!-- Diagnosis Input -->
-				<Label Content="Diagnosis:"/>
-				<TextBox x:Name="TxtDiagnosis"
-                         Margin="0,0,0,5"
-                         IsEnabled="False"
-                         Height="60"
-                         TextWrapping="Wrap"/>
+						<!-- Patient Registration Form -->
+						<Label Content="First Name:"/>
+						<TextBox x:Name="TxtPatientFirstName"
+                                 Margin="0,0,0,5"/>
 
-				<!-- Notes Input -->
-				<Label Content="Notes:"/>
-				<TextBox x:Name="TxtNotes"
-                         Margin="0,0,0,10"
-                         IsEnabled="False"
-                         Height="100"
-                         TextWrapping="Wrap"/>
+						<Label Content="Last Name:"/>
+						<TextBox x:Name="TxtPatientLastName"
+                                 Margin="0,0,0,5"/>
 
-				<!-- Save Button -->
-				<Button x:Name="SaveButton"
-                        Content="Save Visit"
-                        HorizontalAlignment="Left"
-                        Padding="10,5"
-                        IsEnabled="False"
-                        Click="SaveButton_Click"/>
+						<Label Content="Date of Birth:"/>
+						<DatePicker x:Name="DatePatientBirth"
+                                    Margin="0,0,0,5"/>
 
-				<!-- Status Bar -->
-				<TextBlock x:Name="StatusText"
-                           Margin="0,10,0,0"
-                           Foreground="Gray"
-                           FontStyle="Italic"/>
-			</StackPanel>
-		</Border>
+						<Label Content="Gender:"/>
+						<ComboBox x:Name="CmbPatientGender"
+                                  Margin="0,0,0,5"
+                                  SelectedIndex="0">
+							<ComboBoxItem>Male</ComboBoxItem>
+							<ComboBoxItem>Female</ComboBoxItem>
+							<ComboBoxItem>Other</ComboBoxItem>
+						</ComboBox>
+
+						<Label Content="Marital Status:"/>
+						<ComboBox x:Name="CmbPatientMaritalStatus"
+                                  Margin="0,0,0,5"
+                                  SelectedIndex="0">
+							<ComboBoxItem>Single</ComboBoxItem>
+							<ComboBoxItem>Married</ComboBoxItem>
+							<ComboBoxItem>Divorced</ComboBoxItem>
+							<ComboBoxItem>Widowed</ComboBoxItem>
+						</ComboBox>
+
+						<Label Content="Contact Number:"/>
+						<TextBox x:Name="TxtPatientContact"
+                                 Margin="0,0,0,5"/>
+
+						<Label Content="Email:"/>
+						<TextBox x:Name="TxtPatientEmail"
+                                 Margin="0,0,0,5"/>
+
+						<Label Content="Address:"/>
+						<TextBox x:Name="TxtPatientAddress"
+                                 Height="60"
+                                 TextWrapping="Wrap"
+                                 Margin="0,0,0,15"/>
+
+						<Button x:Name="RegisterPatientButton"
+                                Content="Register Patient"
+                                Width="150"
+                                Height="35"
+                                FontWeight="Bold"
+                                Background="#28a745"
+                                Foreground="White"
+                                Click="RegisterPatientButton_Click"/>
+
+						<TextBlock x:Name="RegisterStatusText"
+                                   Margin="0,10,0,0"
+                                   Foreground="Gray"
+                                   FontStyle="Italic"/>
+					</StackPanel>
+				</ScrollViewer>
+			</Border>
+
+			<!-- Main Content Area (Visible after login) -->
+			<Border x:Name="MainContentSection"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    Padding="20"
+                    Background="White"
+                    Visibility="Collapsed">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="10"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
+
+					<!-- Left: Patient Selection -->
+					<Border Grid.Column="0"
+                            Padding="15"
+                            Background="#f8f9fa"
+                            BorderBrush="#e0e0e0"
+                            BorderThickness="1">
+						<StackPanel>
+							<TextBlock Text="Patient Management"
+                                       FontWeight="Bold"
+                                       FontSize="16"
+                                       Margin="0,0,0,15"/>
+
+							<!-- Patient Search/Filter -->
+							<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+								<TextBox x:Name="TxtPatientSearch"
+                                         Width="200"
+                                         Margin="0,0,10,0"
+                                         TextChanged="TxtPatientSearch_TextChanged"/>
+								<Button Content="Search"
+                                        Padding="10,5"/>
+							</StackPanel>
+
+							<!-- Patient List -->
+							<Label Content="Select Patient:"/>
+							<ListBox x:Name="PatientListBox"
+                                     Height="300"
+                                     Margin="0,0,0,10"
+                                     SelectionChanged="PatientListBox_SelectionChanged">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="14"
+                                                   Padding="5"/>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+
+							<!-- Patient Quick Actions -->
+							<StackPanel Orientation="Horizontal">
+								<Button Content="Refresh"
+                                        Padding="10,5"
+                                        Margin="0,0,10,0"
+                                        Click="RefreshPatientsButton_Click"/>
+								<Button x:Name="AddNewPatientButton"
+                                        Content="+ Add New Patient"
+                                        Padding="10,5"
+                                        Background="#28a745"
+                                        Foreground="White"
+                                        Click="AddNewPatientButton_Click"/>
+							</StackPanel>
+						</StackPanel>
+					</Border>
+
+					<!-- Divider -->
+					<GridSplitter Grid.Column="1"
+                                  Width="5"
+                                  Background="LightGray"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Stretch"/>
+
+					<!-- Right: Visit Management -->
+					<Border Grid.Column="2"
+                            Padding="15"
+                            Background="#f8f9fa"
+                            BorderBrush="#e0e0e0"
+                            BorderThickness="1">
+						<StackPanel>
+							<TextBlock Text="Visit Management"
+                                       FontWeight="Bold"
+                                       FontSize="16"
+                                       Margin="0,0,0,15"/>
+
+							<!-- Selected Patient Info -->
+							<Border Background="White"
+                                    Padding="10"
+                                    BorderBrush="#e0e0e0"
+                                    BorderThickness="1"
+                                    Margin="0,0,0,15">
+								<StackPanel>
+									<TextBlock x:Name="SelectedPatientInfo"
+                                               FontWeight="Bold"
+                                               FontSize="14"/>
+									<TextBlock x:Name="SelectedPatientDetails"
+                                               FontSize="12"
+                                               Foreground="Gray"/>
+								</StackPanel>
+							</Border>
+
+							<!-- Visit Form -->
+							<Label Content="Diagnosis:"/>
+							<TextBox x:Name="TxtDiagnosis"
+                                     Height="60"
+                                     TextWrapping="Wrap"
+                                     Margin="0,0,0,5"/>
+
+							<Label Content="Notes:"/>
+							<TextBox x:Name="TxtNotes"
+                                     Height="100"
+                                     TextWrapping="Wrap"
+                                     Margin="0,0,0,5"/>
+
+							<Label Content="Marital Status:"/>
+							<ComboBox x:Name="CmbVisitMaritalStatus"
+                                      Margin="0,0,0,10"
+                                      SelectedIndex="0">
+								<ComboBoxItem>Single</ComboBoxItem>
+								<ComboBoxItem>Married</ComboBoxItem>
+								<ComboBoxItem>Divorced</ComboBoxItem>
+								<ComboBoxItem>Widowed</ComboBoxItem>
+							</ComboBox>
+
+							<!-- Additional Visit Fields (Collapsible) -->
+							<Expander Header="Additional Information"
+                                      Margin="0,0,0,10">
+								<StackPanel>
+									<!-- Add more visit fields here as needed -->
+									<Label Content="Blood Pressure:"/>
+									<TextBox x:Name="TxtBloodPressure"
+                                             Margin="0,0,0,5"/>
+
+									<Label Content="Temperature (°C):"/>
+									<TextBox x:Name="TxtTemperature"
+                                             Margin="0,0,0,5"/>
+
+									<Label Content="Heart Rate (bpm):"/>
+									<TextBox x:Name="TxtHeartRate"
+                                             Margin="0,0,0,5"/>
+								</StackPanel>
+							</Expander>
+
+							<Button x:Name="SaveVisitButton"
+                                    Content="Save Visit"
+                                    Width="120"
+                                    Height="40"
+                                    FontWeight="Bold"
+                                    Background="#0078D4"
+                                    Foreground="White"
+                                    Click="SaveVisitButton_Click"/>
+						</StackPanel>
+					</Border>
+				</Grid>
+			</Border>
+		</Grid>
 	</Grid>
 </Window>

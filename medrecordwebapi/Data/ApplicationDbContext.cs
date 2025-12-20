@@ -2,7 +2,7 @@
 using SharedModels.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
-namespace MedRecordWebApi.Data
+namespace Medrecord.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

@@ -9,7 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using SharedModels.Models; // Add reference to SharedModels
+using SharedModels.Models;
 
 namespace MedRecordsWPF
 {
@@ -20,6 +20,7 @@ namespace MedRecordsWPF
         private string _authToken;
         private string _currentUserId;
         private int _currentPatientId = 0;
+        private List<PatientViewModel> _allPatients = new List<PatientViewModel>();
 
         public MainWindow()
         {
@@ -40,8 +41,7 @@ namespace MedRecordsWPF
 
             try
             {
-                // Test connection by calling a simple endpoint
-                var response = await _httpClient.GetAsync($"{_baseUrl}/api/health");
+                var response = await _httpClient.GetAsync($"{_baseUrl}/");
                 if (response.IsSuccessStatusCode)
                 {
                     MessageBox.Show("API connection successful!", "Success",
@@ -50,20 +50,9 @@ namespace MedRecordsWPF
                 }
                 else
                 {
-                    // Try the root URL if /api/health doesn't exist
-                    response = await _httpClient.GetAsync($"{_baseUrl}/");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        MessageBox.Show("API connection successful!", "Success",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                        StatusText.Text = "Connected to API";
-                    }
-                    else
-                    {
-                        MessageBox.Show($"API returned status: {response.StatusCode}", "Connection Failed",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                        StatusText.Text = "Connection failed";
-                    }
+                    MessageBox.Show($"API returned status: {response.StatusCode}", "Connection Failed",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    StatusText.Text = "Connection failed";
                 }
             }
             catch (Exception ex)
@@ -98,7 +87,6 @@ namespace MedRecordsWPF
                 LoginButton.Content = "Logging in...";
                 LoginButton.IsEnabled = false;
 
-                // Call login endpoint - matches your AuthController
                 var loginRequest = new
                 {
                     Username = username,
@@ -121,15 +109,15 @@ namespace MedRecordsWPF
                     _authToken = loginResponse.Token;
                     _currentUserId = loginResponse.UserId;
 
-                    // Set authorization header for future requests
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new AuthenticationHeaderValue("Bearer", _authToken);
 
-                    MessageBox.Show("Login successful!", "Success",
+                    MessageBox.Show($"Login successful! Welcome, {username}!", "Success",
                         MessageBoxButton.OK, MessageBoxImage.Information);
 
-                    EnableDataEntryControls(true);
-                    await LoadPatients();
+                    // Switch to main content
+                    ShowMainContent();
+                    await LoadAllPatients();
                 }
                 else
                 {
@@ -150,7 +138,18 @@ namespace MedRecordsWPF
             }
         }
 
-        private async Task LoadPatients()
+        private void ShowMainContent()
+        {
+            // Hide login/register sections
+            LoginSection.Visibility = Visibility.Collapsed;
+            RegisterSection.Visibility = Visibility.Collapsed;
+            MiddleDivider.Visibility = Visibility.Collapsed;
+
+            // Show main content
+            MainContentSection.Visibility = Visibility.Visible;
+        }
+
+        private async Task LoadAllPatients()
         {
             try
             {
@@ -164,53 +163,139 @@ namespace MedRecordsWPF
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
 
-                    Dispatcher.Invoke(() =>
+                    _allPatients = patients?.Select(p => new PatientViewModel
                     {
-                        // Create display items with formatted names
-                        var patientDisplayItems = patients?.Select(p => new PatientDisplayItem(p)).ToList()
-                            ?? new List<PatientDisplayItem>();
+                        PatientId = GetPropertyValue<int>(p, "PatientId"),
+                        FirstName = GetPropertyValue<string>(p, "FirstName") ?? GetPropertyValue<string>(p, "Name") ?? "",
+                        LastName = GetPropertyValue<string>(p, "LastName") ?? GetPropertyValue<string>(p, "Surname") ?? "",
+                        DateOfBirth = GetPropertyValue<DateTime>(p, "DateOfBirth"),
+                        Gender = GetPropertyValue<string>(p, "Gender") ?? "",
+                        ContactNumber = GetPropertyValue<string>(p, "ContactNumber") ?? "",
+                        Email = GetPropertyValue<string>(p, "Email") ?? "",
+                        Address = GetPropertyValue<string>(p, "Address") ?? ""
+                    }).ToList() ?? new List<PatientViewModel>();
 
-                        PatientComboBox.ItemsSource = patientDisplayItems;
-                        PatientComboBox.DisplayMemberPath = "DisplayName";
-                        PatientComboBox.SelectedValuePath = "PatientId";
-
-                        if (patientDisplayItems.Any())
-                        {
-                            PatientComboBox.SelectedIndex = 0;
-                            StatusText.Text = $"{patientDisplayItems.Count} patients loaded";
-                        }
-                        else
-                        {
-                            StatusText.Text = "No patients found";
-                        }
-                    });
+                    UpdatePatientList();
                 }
                 else
                 {
-                    Dispatcher.Invoke(() =>
-                    {
-                        MessageBox.Show($"Failed to load patients. Status: {response.StatusCode}", "Error",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                    });
+                    MessageBox.Show($"Failed to load patients. Status: {response.StatusCode}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                Dispatcher.Invoke(() =>
-                {
-                    MessageBox.Show($"Error loading patients: {ex.Message}", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                });
+                MessageBox.Show($"Error loading patients: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private async void PatientComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private T GetPropertyValue<T>(object obj, string propertyName)
         {
-            if (PatientComboBox.SelectedItem is PatientDisplayItem selectedPatient)
+            try
+            {
+                var prop = obj.GetType().GetProperty(propertyName);
+                if (prop != null)
+                {
+                    var value = prop.GetValue(obj);
+                    if (value is T typedValue)
+                        return typedValue;
+                }
+            }
+            catch { }
+            return default(T);
+        }
+
+        private void UpdatePatientList()
+        {
+            var searchText = TxtPatientSearch?.Text?.ToLower() ?? "";
+
+            var filteredPatients = _allPatients
+                .Where(p => string.IsNullOrEmpty(searchText) ||
+                           p.DisplayName.ToLower().Contains(searchText) ||
+                           p.ContactNumber?.ToLower().Contains(searchText) == true)
+                .OrderBy(p => p.LastName)
+                .ThenBy(p => p.FirstName)
+                .ToList();
+
+            PatientListBox.ItemsSource = filteredPatients;
+        }
+
+        private async void RegisterPatientButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RegisterPatientButton.Content = "Registering...";
+                RegisterPatientButton.IsEnabled = false;
+
+                var patientData = new Dictionary<string, object>
+                {
+                    ["FirstName"] = TxtPatientFirstName.Text,
+                    ["LastName"] = TxtPatientLastName.Text,
+                    ["DateOfBirth"] = DatePatientBirth.SelectedDate ?? DateTime.Now.AddYears(-30),
+                    ["Gender"] = (CmbPatientGender.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Male",
+                    ["MaritalStatus"] = (CmbPatientMaritalStatus.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Single",
+                    ["ContactNumber"] = TxtPatientContact.Text,
+                    ["Email"] = TxtPatientEmail.Text,
+                    ["Address"] = TxtPatientAddress.Text
+                };
+
+                var json = JsonSerializer.Serialize(patientData);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/Patients", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Patient registered successfully!", "Success",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Clear form
+                    TxtPatientFirstName.Text = "";
+                    TxtPatientLastName.Text = "";
+                    DatePatientBirth.SelectedDate = null;
+                    CmbPatientGender.SelectedIndex = 0;
+                    CmbPatientMaritalStatus.SelectedIndex = 0;
+                    TxtPatientContact.Text = "";
+                    TxtPatientEmail.Text = "";
+                    TxtPatientAddress.Text = "";
+
+                    RegisterStatusText.Text = "Patient registered successfully!";
+
+                    // Reload patients if logged in
+                    if (MainContentSection.Visibility == Visibility.Visible)
+                        await LoadAllPatients();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"Failed to register patient: {error}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error registering patient: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                RegisterPatientButton.Content = "Register Patient";
+                RegisterPatientButton.IsEnabled = true;
+            }
+        }
+
+        private void PatientListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (PatientListBox.SelectedItem is PatientViewModel selectedPatient)
             {
                 _currentPatientId = selectedPatient.PatientId;
-                await LoadVisitHistory(_currentPatientId);
 
+                // Update selected patient info
+                SelectedPatientInfo.Text = $"{selectedPatient.LastName}, {selectedPatient.FirstName}";
+                SelectedPatientDetails.Text = $"Age: {CalculateAge(selectedPatient.DateOfBirth)} | Gender: {selectedPatient.Gender} | Contact: {selectedPatient.ContactNumber}";
+
+                LoadVisitHistory(_currentPatientId);
                 TxtDiagnosis.Text = string.Empty;
                 TxtNotes.Text = string.Empty;
             }
@@ -220,8 +305,6 @@ namespace MedRecordsWPF
         {
             try
             {
-                // Your current API doesn't have GetVisitsByPatient endpoint
-                // So we need to get all visits and filter client-side
                 var response = await _httpClient.GetAsync($"{_baseUrl}/api/Visits");
 
                 if (response.IsSuccessStatusCode)
@@ -232,24 +315,41 @@ namespace MedRecordsWPF
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
 
-                    // Filter visits for this patient
-                    var patientVisits = allVisits?.Where(v => v.PatientId == patientId).ToList()
-                        ?? new List<Visit>();
+                    // Filter by patient
+                    var patientVisits = allVisits?.Where(v =>
+                    {
+                        var patientIdProp = v.GetType().GetProperty("PatientId");
+                        return patientIdProp != null && patientIdProp.GetValue(v) is int id && id == patientId;
+                    }).ToList() ?? new List<Visit>();
 
                     string historyText = "PATIENT VISIT HISTORY:\n\n";
                     int visitCount = 0;
 
-                    foreach (var visit in patientVisits.OrderByDescending(v => v.VisitDate))
+                    foreach (var visit in patientVisits.OrderByDescending(v =>
+                    {
+                        var dateProp = v.GetType().GetProperty("CreatedAt") ??
+                                      v.GetType().GetProperty("VisitDate");
+                        return dateProp != null && dateProp.GetValue(v) is DateTime date ? date : DateTime.MinValue;
+                    }))
                     {
                         visitCount++;
-                        var visitDate = visit.VisitDate.ToString("yyyy-MM-dd HH:mm");
-                        var doctorName = GetDoctorNameFromVisit(visit); // You'll need to implement this
 
-                        historyText += $"Visit #{visitCount} - {visitDate}\n";
-                        historyText += $"Doctor: {doctorName}\n";
-                        historyText += $"Diagnosis: {visit.Diagnosis}\n";
-                        if (!string.IsNullOrWhiteSpace(visit.Notes))
-                            historyText += $"Notes: {visit.Notes}\n";
+                        var dateProp = visit.GetType().GetProperty("CreatedAt") ??
+                                      visit.GetType().GetProperty("VisitDate");
+                        var date = dateProp != null && dateProp.GetValue(visit) is DateTime visitDate
+                            ? visitDate.ToString("yyyy-MM-dd HH:mm")
+                            : "Unknown Date";
+
+                        var diagnosisProp = visit.GetType().GetProperty("Diagnosis");
+                        var diagnosis = diagnosisProp != null ? diagnosisProp.GetValue(visit)?.ToString() : "";
+
+                        var notesProp = visit.GetType().GetProperty("Notes");
+                        var notes = notesProp != null ? notesProp.GetValue(visit)?.ToString() : "";
+
+                        historyText += $"Visit #{visitCount} - {date}\n";
+                        historyText += $"Diagnosis: {diagnosis}\n";
+                        if (!string.IsNullOrWhiteSpace(notes))
+                            historyText += $"Notes: {notes}\n";
                         historyText += new string('-', 50) + "\n\n";
                     }
 
@@ -258,49 +358,20 @@ namespace MedRecordsWPF
                         historyText = "No previous visits found for this patient.";
                     }
 
-                    Dispatcher.Invoke(() =>
-                    {
-                        HistoryTextBlock.Text = historyText;
-                    });
+                    HistoryTextBlock.Text = historyText;
                 }
                 else
                 {
-                    Dispatcher.Invoke(() =>
-                    {
-                        HistoryTextBlock.Text = "Error loading visit history.";
-                    });
+                    HistoryTextBlock.Text = "Error loading visit history.";
                 }
             }
             catch (Exception ex)
             {
-                Dispatcher.Invoke(() =>
-                {
-                    HistoryTextBlock.Text = $"Error loading visit history: {ex.Message}";
-                });
+                HistoryTextBlock.Text = $"Error loading visit history: {ex.Message}";
             }
         }
 
-        private string GetDoctorNameFromVisit(Visit visit)
-        {
-            // Since your Visit model doesn't include Doctor navigation property in the GET endpoint
-            // You have a few options:
-
-            // Option 1: If DoctorId is stored in the Visit model
-            if (!string.IsNullOrEmpty(visit.DoctorId))
-            {
-                return $"Dr. {visit.DoctorId}"; // Or fetch doctor details from API
-            }
-
-            // Option 2: If you have a DoctorName property
-            if (!string.IsNullOrEmpty(visit.DoctorName))
-            {
-                return visit.DoctorName;
-            }
-
-            return "Unknown Doctor";
-        }
-
-        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        private async void SaveVisitButton_Click(object sender, RoutedEventArgs e)
         {
             if (_currentPatientId == 0)
             {
@@ -311,6 +382,7 @@ namespace MedRecordsWPF
 
             string diagnosis = TxtDiagnosis.Text;
             string notes = TxtNotes.Text;
+            string maritalStatus = (CmbVisitMaritalStatus.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Single";
 
             if (string.IsNullOrWhiteSpace(diagnosis))
             {
@@ -321,21 +393,35 @@ namespace MedRecordsWPF
 
             try
             {
-                SaveButton.Content = "Saving...";
-                SaveButton.IsEnabled = false;
+                SaveVisitButton.Content = "Saving...";
+                SaveVisitButton.IsEnabled = false;
 
-                // Create a new Visit object matching your model
-                var visit = new Visit
+                var visitData = new Dictionary<string, object>
                 {
-                    PatientId = _currentPatientId,
-                    Diagnosis = diagnosis,
-                    Notes = notes,
-                    VisitDate = DateTime.Now,
-                    // You'll need to set DoctorId from the logged-in user
-                    DoctorId = _currentUserId
+                    ["PatientId"] = _currentPatientId,
+                    ["Diagnosis"] = diagnosis,
+                    ["Notes"] = notes,
+                    ["MaritalStatus"] = maritalStatus
                 };
 
-                var json = JsonSerializer.Serialize(visit);
+                // Add additional fields if filled
+                if (!string.IsNullOrWhiteSpace(TxtBloodPressure.Text))
+                    visitData["BloodPressure"] = TxtBloodPressure.Text;
+
+                if (!string.IsNullOrWhiteSpace(TxtTemperature.Text) && double.TryParse(TxtTemperature.Text, out double temp))
+                    visitData["Temperature"] = temp;
+
+                if (!string.IsNullOrWhiteSpace(TxtHeartRate.Text) && int.TryParse(TxtHeartRate.Text, out int hr))
+                    visitData["HeartRate"] = hr;
+
+                // Add date
+                visitData["CreatedAt"] = DateTime.Now;
+
+                // Add DoctorId
+                if (!string.IsNullOrEmpty(_currentUserId))
+                    visitData["DoctorId"] = _currentUserId;
+
+                var json = JsonSerializer.Serialize(visitData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PostAsync($"{_baseUrl}/api/Visits", content);
@@ -348,6 +434,9 @@ namespace MedRecordsWPF
                     await LoadVisitHistory(_currentPatientId);
                     TxtDiagnosis.Text = string.Empty;
                     TxtNotes.Text = string.Empty;
+                    TxtBloodPressure.Text = string.Empty;
+                    TxtTemperature.Text = string.Empty;
+                    TxtHeartRate.Text = string.Empty;
                 }
                 else
                 {
@@ -363,42 +452,62 @@ namespace MedRecordsWPF
             }
             finally
             {
-                SaveButton.Content = "Save Visit";
-                SaveButton.IsEnabled = true;
+                SaveVisitButton.Content = "Save Visit";
+                SaveVisitButton.IsEnabled = true;
             }
         }
 
-        private void EnableDataEntryControls(bool enable)
+        private void AddNewPatientButton_Click(object sender, RoutedEventArgs e)
         {
-            PatientComboBox.IsEnabled = enable;
-            TxtDiagnosis.IsEnabled = enable;
-            TxtNotes.IsEnabled = enable;
-            SaveButton.IsEnabled = enable;
+            // Switch back to register section temporarily
+            MainContentSection.Visibility = Visibility.Collapsed;
+            LoginSection.Visibility = Visibility.Collapsed;
+            RegisterSection.Visibility = Visibility.Visible;
+            MiddleDivider.Visibility = Visibility.Collapsed;
         }
 
-        // Helper class for displaying patients
-        public class PatientDisplayItem
+        private void RefreshPatientsButton_Click(object sender, RoutedEventArgs e)
         {
-            private readonly Patient _patient;
+            LoadAllPatients();
+        }
 
-            public PatientDisplayItem(Patient patient)
-            {
-                _patient = patient;
-            }
+        private void TxtPatientSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdatePatientList();
+        }
 
-            public int PatientId => _patient.PatientId;
-            public string DisplayName => $"{_patient.LastName}, {_patient.FirstName} (Age: {CalculateAge(_patient.DateOfBirth)})";
+        private int CalculateAge(DateTime dateOfBirth)
+        {
+            DateTime today = DateTime.Today;
+            int age = today.Year - dateOfBirth.Year;
+            if (dateOfBirth.Date > today.AddYears(-age)) age--;
+            return age;
+        }
 
-            private int CalculateAge(DateTime dateOfBirth)
+        // ViewModel classes
+        public class PatientViewModel
+        {
+            public int PatientId { get; set; }
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+            public DateTime DateOfBirth { get; set; }
+            public string Gender { get; set; }
+            public string ContactNumber { get; set; }
+            public string Email { get; set; }
+            public string Address { get; set; }
+
+            public string DisplayName => $"{LastName}, {FirstName}";
+            public int Age => CalculateAge(DateOfBirth);
+
+            private int CalculateAge(DateTime dob)
             {
                 DateTime today = DateTime.Today;
-                int age = today.Year - dateOfBirth.Year;
-                if (dateOfBirth.Date > today.AddYears(-age)) age--;
+                int age = today.Year - dob.Year;
+                if (dob.Date > today.AddYears(-age)) age--;
                 return age;
             }
         }
 
-        // DTO for login response
         public class LoginResponse
         {
             public string Token { get; set; }

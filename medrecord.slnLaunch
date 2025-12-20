@@ -3,7 +3,7 @@
     "Name": "New Profile",
     "Projects": [
       {
-        "Path": "medrecordwebapi\\Medrecordwebapi.csproj",
+        "Path": "medrecordwebapi\\Medrecord.csproj",
         "Action": "Start"
       },
       {
