@@ -6,141 +6,75 @@
         mc:Ignorable="d"
         Title="Patient Visit Management" Height="700" Width="900">
 
-	<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto" MinHeight="100"/>
-			<RowDefinition Height="5"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
+	<ScrollViewer VerticalScrollBarVisibility="Auto">
+		<StackPanel Background="#f5f5f5" Margin="10">
 
-		<!-- Top Area: Collapsible History Display -->
-		<Expander Grid.Row="0"
-                  Header="Previous Visits History (Click to Collapse/Expand)"
-                  IsExpanded="True"
-                  Background="#f0f0f0"
-                  Padding="5">
-			<ScrollViewer VerticalScrollBarVisibility="Auto">
-				<TextBlock x:Name="HistoryTextBlock"
-                           TextWrapping="Wrap"
-                           Padding="10"
-                           FontSize="14"
-                           Text="[Patient Visit History will appear here]"/>
-			</ScrollViewer>
-		</Expander>
 
-		<!-- GridSplitter -->
-		<GridSplitter Grid.Row="1"
-                      HorizontalAlignment="Stretch"
-                      Background="Gray"
-                      ShowsPreview="True"
-                      Height="5"/>
-
-		<!-- Bottom Area: Dynamic Content -->
-		<Grid Grid.Row="2">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="*"/>
-			</Grid.ColumnDefinitions>
-
-			<!-- Left Panel: Login Section (Visible before login) -->
-			<Border x:Name="LoginSection"
-                    Grid.Column="0"
-                    Padding="20"
-                    Background="White"
-                    BorderBrush="#e0e0e0"
-                    BorderThickness="1">
-				<StackPanel>
-					<TextBlock Text="Login to Medical Records System"
-                               FontWeight="Bold"
-                               FontSize="18"
-                               Margin="0,0,0,20"/>
-
+			<!-- Login Expander -->
+			<Expander x:Name="LoginExpander"
+				      Header="Login to Medical Records System (Click to Collapse/Expand)"
+                      Background="#f0f0f0"
+                      Padding="5"
+                      Margin="0,0,0,10">
+				<StackPanel Background="White" Margin="10">
 					<!-- API Connection -->
 					<StackPanel Orientation="Horizontal" Margin="0,0,0,15">
 						<Label Content="API URL:" VerticalAlignment="Center" Width="80"/>
-						<TextBox x:Name="TxtApiUrl"
-                                 Text="https://localhost:7287"
-                                 Width="250"
-                                 Margin="5,0,10,0"/>
-						<Button x:Name="TestConnectionButton"
-                                Content="Test Connection"
-                                Click="TestConnectionButton_Click"
-                                Padding="5"/>
+						<TextBox x:Name="TxtApiUrl" Text="https://localhost:7287/swagger" Width="250" Margin="5,0,10,0"/>
+						<Button x:Name="TestConnectionButton" Content="Test Connection" Click="TestConnectionButton_Click" Padding="5"/>
 					</StackPanel>
 
 					<!-- Login Form -->
 					<Label Content="Username:"/>
-					<TextBox x:Name="TxtUsername"
-                             Margin="0,0,0,5"/>
+					<TextBox x:Name="TxtUsername" Margin="0,0,0,5"/>
 					<Label Content="Password:"/>
-					<PasswordBox x:Name="TxtPassword"
-                                 Margin="0,0,0,15"/>
+					<PasswordBox x:Name="TxtPassword" Margin="0,0,0,15"/>
 
-					<Button x:Name="LoginButton"
-                            Content="Login"
-                            Width="100"
-                            Height="35"
-                            FontWeight="Bold"
-                            Background="#0078D4"
-                            Foreground="White"
+					<Button x:Name="LoginButton" Content="Login" Width="100" Height="35"
+                            FontWeight="Bold" Background="#0078D4" Foreground="White"
                             Click="LoginButton_Click"/>
 
-					<TextBlock x:Name="StatusText"
-                               Margin="0,15,0,0"
-                               Foreground="Gray"
-                               FontStyle="Italic"/>
+					<TextBlock x:Name="StatusText" Margin="0,15,0,0" Foreground="Gray" FontStyle="Italic"/>
 				</StackPanel>
-			</Border>
+			</Expander>
+			
+			
+			<!-- Top: Collapsible Visit History -->
+			<Expander Header="Previous Visits History (Click to Collapse/Expand)"
+                      Background="#f0f0f0"
+                      Padding="5"
+                      Margin="0,0,0,10">
+				<ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
+					<TextBlock x:Name="HistoryTextBlock"
+                               TextWrapping="Wrap"
+                               Padding="10"
+                               FontSize="14"
+                               Text="[Patient Visit History will appear here]"/>
+				</ScrollViewer>
+			</Expander>
 
-			<!-- Middle Divider (Visible before login) -->
-			<GridSplitter x:Name="MiddleDivider"
-                          Grid.Column="1"
-                          Width="5"
-                          Background="LightGray"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Stretch"/>
-
-			<!-- Right Panel: Patient Registration (Visible before login) -->
-			<Border x:Name="RegisterSection"
-                    Grid.Column="2"
-                    Padding="20"
-                    Background="White"
-                    BorderBrush="#e0e0e0"
-                    BorderThickness="1">
-				<ScrollViewer VerticalScrollBarVisibility="Auto">
-					<StackPanel>
-						<TextBlock Text="Register New Patient"
-                                   FontWeight="Bold"
-                                   FontSize="18"
-                                   Margin="0,0,0,20"/>
-
+			<!-- Registration Expander -->
+			<Expander Header="Register New Patient (Click to Collapse/Expand)"
+                      Background="#f0f0f0"
+                      Padding="5"
+                      Margin="0,0,0,10" IsExpanded="True">
+				<ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+					<StackPanel Background="White" Margin="10">
 						<!-- Patient Registration Form -->
-						<Label Content="First Name:"/>
-						<TextBox x:Name="TxtPatientFirstName"
-                                 Margin="0,0,0,5"/>
-
-						<Label Content="Last Name:"/>
-						<TextBox x:Name="TxtPatientLastName"
-                                 Margin="0,0,0,5"/>
+						<Label Content="Patient Name:"/>
+						<TextBox x:Name="TxtPatientName" Margin="0,0,0,5"/>
 
 						<Label Content="Date of Birth:"/>
-						<DatePicker x:Name="DatePatientBirth"
-                                    Margin="0,0,0,5"/>
+						<DatePicker x:Name="DatePatientBirth" Margin="0,0,0,5"/>
 
 						<Label Content="Gender:"/>
-						<ComboBox x:Name="CmbPatientGender"
-                                  Margin="0,0,0,5"
-                                  SelectedIndex="0">
+						<ComboBox x:Name="CmbPatientGender" Margin="0,0,0,5" SelectedIndex="0">
 							<ComboBoxItem>Male</ComboBoxItem>
 							<ComboBoxItem>Female</ComboBoxItem>
-							<ComboBoxItem>Other</ComboBoxItem>
 						</ComboBox>
 
 						<Label Content="Marital Status:"/>
-						<ComboBox x:Name="CmbPatientMaritalStatus"
-                                  Margin="0,0,0,5"
-                                  SelectedIndex="0">
+						<ComboBox x:Name="CmbPatientMaritalStatus" Margin="0,0,0,5" SelectedIndex="0">
 							<ComboBoxItem>Single</ComboBoxItem>
 							<ComboBoxItem>Married</ComboBoxItem>
 							<ComboBoxItem>Divorced</ComboBoxItem>
@@ -148,192 +82,106 @@
 						</ComboBox>
 
 						<Label Content="Contact Number:"/>
-						<TextBox x:Name="TxtPatientContact"
-                                 Margin="0,0,0,5"/>
+						<TextBox x:Name="TxtPatientContact" Margin="0,0,0,5"/>
 
 						<Label Content="Email:"/>
-						<TextBox x:Name="TxtPatientEmail"
-                                 Margin="0,0,0,5"/>
+						<TextBox x:Name="TxtPatientEmail" Margin="0,0,0,5"/>
 
 						<Label Content="Address:"/>
-						<TextBox x:Name="TxtPatientAddress"
-                                 Height="60"
-                                 TextWrapping="Wrap"
-                                 Margin="0,0,0,15"/>
+						<TextBox x:Name="TxtPatientAddress" Height="60" TextWrapping="Wrap" Margin="0,0,0,15"/>
 
-						<Button x:Name="RegisterPatientButton"
-                                Content="Register Patient"
-                                Width="150"
-                                Height="35"
-                                FontWeight="Bold"
-                                Background="#28a745"
-                                Foreground="White"
-                                Click="RegisterPatientButton_Click"/>
+						<Label Content="Blood Group:"/>
+						<TextBox x:Name="TxtBloodGroup" Height="60" TextWrapping="Wrap" Margin="0,0,0,15"/>
 
-						<TextBlock x:Name="RegisterStatusText"
-                                   Margin="0,10,0,0"
-                                   Foreground="Gray"
-                                   FontStyle="Italic"/>
+						<Label Content="Allergies:"/>
+						<TextBox x:Name="TxtAllergies" Height="60" TextWrapping="Wrap" Margin="0,0,0,15"/>
+
+						<StackPanel Orientation="Horizontal" Margin="0,10,0,0" HorizontalAlignment="Left">
+							<Button x:Name="RegisterPatientButton" Content="Register Patient" Width="150" Height="35"
+									FontWeight="Bold" Background="#28a745" Foreground="White"
+									Click="RegisterPatientButton_Click"
+									Margin="0,0,10,0"/>
+							<Button x:Name="CancelRegisterButton" Content="Cancel" Width="100" Height="35"
+									FontWeight="Bold" Background="#dc3545" Foreground="White"
+									Click="CancelRegisterButton_Click"/>
+						</StackPanel>
+
+						<TextBlock x:Name="RegisterStatusText" Margin="0,10,0,0" Foreground="Gray" FontStyle="Italic"/>
 					</StackPanel>
 				</ScrollViewer>
-			</Border>
+			</Expander>
 
-			<!-- Main Content Area (Visible after login) -->
+			<!-- Main Content (Patient Management) -->
 			<Border x:Name="MainContentSection"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    Padding="20"
                     Background="White"
-                    Visibility="Collapsed">
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="10"/>
-						<ColumnDefinition Width="*"/>
-					</Grid.ColumnDefinitions>
+                    BorderBrush="#e0e0e0"
+                    BorderThickness="1"
+                    Padding="15"
+                    Margin="0,0,0,10">
+				<StackPanel>
+					<TextBlock Text="Patient Management" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
 
-					<!-- Left: Patient Selection -->
-					<Border Grid.Column="0"
-                            Padding="15"
-                            Background="#f8f9fa"
-                            BorderBrush="#e0e0e0"
-                            BorderThickness="1">
+					<!-- Patient Search -->
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+						<TextBox x:Name="TxtPatientSearch" Width="200" Margin="0,0,10,0"
+                                 TextChanged="TxtPatientSearch_TextChanged"/>
+						<Button Content="Search" Padding="10,5"/>
+					</StackPanel>
+
+					<!-- Patient List -->
+					<Label Content="Select Patient:"/>
+					<ListBox x:Name="PatientListBox" Height="200" Margin="0,0,0,10"
+                             SelectionChanged="PatientListBox_SelectionChanged">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding DisplayName}" FontSize="14" Padding="5"/>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+
+					<!-- Patient Actions -->
+					<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+						<Button Content="Refresh" Padding="10,5" Margin="0,0,10,0"
+                                Click="RefreshPatientsButton_Click"/>
+						<Button x:Name="AddNewPatientButton" Content="+ Add New Patient" Padding="10,5"
+                                Background="#28a745" Foreground="White" Click="AddNewPatientButton_Click"/>
+					</StackPanel>
+
+					<!-- Visit Management Section -->
+					<Border Background="#f8f9fa" BorderBrush="#e0e0e0" BorderThickness="1" Padding="15" Margin="0,10,0,0">
 						<StackPanel>
-							<TextBlock Text="Patient Management"
-                                       FontWeight="Bold"
-                                       FontSize="16"
-                                       Margin="0,0,0,15"/>
-
-							<!-- Patient Search/Filter -->
-							<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-								<TextBox x:Name="TxtPatientSearch"
-                                         Width="200"
-                                         Margin="0,0,10,0"
-                                         TextChanged="TxtPatientSearch_TextChanged"/>
-								<Button Content="Search"
-                                        Padding="10,5"/>
-							</StackPanel>
-
-							<!-- Patient List -->
-							<Label Content="Select Patient:"/>
-							<ListBox x:Name="PatientListBox"
-                                     Height="300"
-                                     Margin="0,0,0,10"
-                                     SelectionChanged="PatientListBox_SelectionChanged">
-								<ListBox.ItemTemplate>
-									<DataTemplate>
-										<TextBlock Text="{Binding DisplayName}"
-                                                   FontSize="14"
-                                                   Padding="5"/>
-									</DataTemplate>
-								</ListBox.ItemTemplate>
-							</ListBox>
-
-							<!-- Patient Quick Actions -->
-							<StackPanel Orientation="Horizontal">
-								<Button Content="Refresh"
-                                        Padding="10,5"
-                                        Margin="0,0,10,0"
-                                        Click="RefreshPatientsButton_Click"/>
-								<Button x:Name="AddNewPatientButton"
-                                        Content="+ Add New Patient"
-                                        Padding="10,5"
-                                        Background="#28a745"
-                                        Foreground="White"
-                                        Click="AddNewPatientButton_Click"/>
-							</StackPanel>
-						</StackPanel>
-					</Border>
-
-					<!-- Divider -->
-					<GridSplitter Grid.Column="1"
-                                  Width="5"
-                                  Background="LightGray"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Stretch"/>
-
-					<!-- Right: Visit Management -->
-					<Border Grid.Column="2"
-                            Padding="15"
-                            Background="#f8f9fa"
-                            BorderBrush="#e0e0e0"
-                            BorderThickness="1">
-						<StackPanel>
-							<TextBlock Text="Visit Management"
-                                       FontWeight="Bold"
-                                       FontSize="16"
-                                       Margin="0,0,0,15"/>
+							<TextBlock Text="Visit Management" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
 
 							<!-- Selected Patient Info -->
-							<Border Background="White"
-                                    Padding="10"
-                                    BorderBrush="#e0e0e0"
-                                    BorderThickness="1"
-                                    Margin="0,0,0,15">
+							<Border Background="White" Padding="10" BorderBrush="#e0e0e0" BorderThickness="1" Margin="0,0,0,10">
 								<StackPanel>
-									<TextBlock x:Name="SelectedPatientInfo"
-                                               FontWeight="Bold"
-                                               FontSize="14"/>
-									<TextBlock x:Name="SelectedPatientDetails"
-                                               FontSize="12"
-                                               Foreground="Gray"/>
+									<TextBlock x:Name="SelectedPatientInfo" FontWeight="Bold" FontSize="12"/>
+									<TextBlock x:Name="SelectedPatientDetails" FontSize="11" Foreground="Gray"/>
 								</StackPanel>
 							</Border>
 
 							<!-- Visit Form -->
-							<Label Content="Diagnosis:"/>
-							<TextBox x:Name="TxtDiagnosis"
-                                     Height="60"
-                                     TextWrapping="Wrap"
-                                     Margin="0,0,0,5"/>
+							<Label Content="Diagnosis:" FontSize="12"/>
+							<TextBox x:Name="TxtDiagnosis" Height="60" TextWrapping="Wrap" Margin="0,0,0,5"/>
 
-							<Label Content="Notes:"/>
-							<TextBox x:Name="TxtNotes"
-                                     Height="100"
-                                     TextWrapping="Wrap"
-                                     Margin="0,0,0,5"/>
+							<Label Content="Notes:" FontSize="12"/>
+							<TextBox x:Name="TxtNotes" Height="80" TextWrapping="Wrap" Margin="0,0,0,5"/>
 
-							<Label Content="Marital Status:"/>
-							<ComboBox x:Name="CmbVisitMaritalStatus"
-                                      Margin="0,0,0,10"
-                                      SelectedIndex="0">
+							<Label Content="Marital Status:" FontSize="12"/>
+							<ComboBox x:Name="CmbVisitMaritalStatus" Margin="0,0,0,10" SelectedIndex="0">
 								<ComboBoxItem>Single</ComboBoxItem>
 								<ComboBoxItem>Married</ComboBoxItem>
 								<ComboBoxItem>Divorced</ComboBoxItem>
 								<ComboBoxItem>Widowed</ComboBoxItem>
 							</ComboBox>
 
-							<!-- Additional Visit Fields (Collapsible) -->
-							<Expander Header="Additional Information"
-                                      Margin="0,0,0,10">
-								<StackPanel>
-									<!-- Add more visit fields here as needed -->
-									<Label Content="Blood Pressure:"/>
-									<TextBox x:Name="TxtBloodPressure"
-                                             Margin="0,0,0,5"/>
-
-									<Label Content="Temperature (°C):"/>
-									<TextBox x:Name="TxtTemperature"
-                                             Margin="0,0,0,5"/>
-
-									<Label Content="Heart Rate (bpm):"/>
-									<TextBox x:Name="TxtHeartRate"
-                                             Margin="0,0,0,5"/>
-								</StackPanel>
-							</Expander>
-
-							<Button x:Name="SaveVisitButton"
-                                    Content="Save Visit"
-                                    Width="120"
-                                    Height="40"
-                                    FontWeight="Bold"
-                                    Background="#0078D4"
-                                    Foreground="White"
+							<Button x:Name="SaveVisitButton" Content="Save Visit" Width="120" Height="35"
+                                    FontWeight="Bold" Background="#0078D4" Foreground="White"
                                     Click="SaveVisitButton_Click"/>
 						</StackPanel>
 					</Border>
-				</Grid>
+				</StackPanel>
 			</Border>
-		</Grid>
-	</Grid>
+		</StackPanel>
+	</ScrollViewer>
 </Window>

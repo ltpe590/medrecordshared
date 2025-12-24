@@ -1,28 +1,41 @@
-﻿using System;
-using System.Collections.Generic; // Required for ICollection
-using System.ComponentModel.DataAnnotations; // Required for [Required] and [DataType]
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SharedModels.Models
 {
     public class Patient
     {
-        // Primary Key for the database table
         public int PatientId { get; set; }
 
-        public string Name { get; set; } // Single combined name field
+        [Required]
+        public string Name { get; set; }
 
-        public string Sex { get; set; } // Stored as a string (e.g., "Male", "Female")
+        public string Sex { get; set; }
 
-        [DataType(DataType.Date)] // Hint for UI, stored as DateTime in DB
+        [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; }
+        public int Age => DateTime.Now.Year - DateOfBirth.Year;
+        public string BloodGroup { get; set; }
+        public string? Allergies { get; set; }
 
-        public string PhoneNumber { get; set; }
+        [DataType(DataType.PhoneNumber)]
+        public string? PhoneNumber { get; set; }
 
-        public string Address { get; set; } // Stored as a string, UI logic handles dropdown
+        public string? Address { get; set; }
 
-        public string ShortNote { get; set; }
+        public string? ShortNote { get; set; }
 
-        // Navigation property: EF Core uses this to efficiently load associated medical records
         public ICollection<Visit> MedicalRecords { get; set; } = new List<Visit>();
+    }
+    public static class AgeConverter
+    {
+        public static DateTime AgeToDateOfBirth(int age)
+        {
+            return DateTime.Today.AddYears(-age);
+        }
+
+        public static int DateOfBirthToAge(DateTime dateOfBirth)
+        {
+            return DateTime.Now.Year - dateOfBirth.Year;
+        }
     }
 }
