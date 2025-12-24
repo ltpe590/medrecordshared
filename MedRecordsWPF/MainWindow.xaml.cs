@@ -142,6 +142,66 @@ namespace MedRecordsWPF
             }
         }
 
+        // In MainWindow.xaml.cs, add or replace the existing event handlers:
+
+        // We need a reference to the Grid container to modify column definitions in C#
+        // Add 'x:Name="MainGrid"' to your <Grid> tag in XAML first if you haven't already.
+        // <Grid x:Name="MainGrid"> ... </Grid> 
+
+        private void Expander_Expanded(object sender, RoutedEventArgs e)
+        {
+            UpdateGridColumns();
+            UpdateMainContentColumnSpan();
+        }
+
+        private void Expander_Collapsed(object sender, RoutedEventArgs e)
+        {
+            UpdateGridColumns();
+            UpdateMainContentColumnSpan();
+        }
+
+        private void UpdateGridColumns()
+        {
+            // Access the actual ColumnDefinitions by their index (0=Left, 1=Main, 2=Right)
+
+            // Left Column (Index 0)
+            if (RegisterExpander.IsExpanded)
+            {
+                // When expanded, set width back to Auto with MinWidth constraint (defined in XAML)
+                MainGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Auto);
+            }
+            else
+            {
+                // When collapsed, set width explicitly to 0 pixels
+                MainGrid.ColumnDefinitions[0].Width = new GridLength(0);
+            }
+
+            // Right Column (Index 2)
+            if (HistoryExpander.IsExpanded)
+            {
+                // When expanded, set width back to Auto with MinWidth constraint (defined in XAML)
+                MainGrid.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Auto);
+            }
+            else
+            {
+                // When collapsed, set width explicitly to 0 pixels
+                MainGrid.ColumnDefinitions[2].Width = new GridLength(0);
+            }
+        }
+
+        // Keep this method as it was from the previous instructions:
+        private void UpdateMainContentColumnSpan()
+        {
+            int startColumn = RegisterExpander.IsExpanded ? 1 : 0;
+            int endColumn = HistoryExpander.IsExpanded ? 1 : 2;
+            int columnSpan = (endColumn - startColumn) + 1;
+
+            Grid.SetColumn(MainContentScrollViewer, startColumn);
+            Grid.SetColumnSpan(MainContentScrollViewer, columnSpan);
+        }
+
+
+
         private void ShowMainContent()
         {
             MainContentSection.Visibility = Visibility.Visible;
