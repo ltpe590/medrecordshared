@@ -35,7 +35,7 @@
 	  <ProjectReference Include="..\Application\Application.csproj" />
 	  <ProjectReference Include="..\Domain\Domain.csproj" />
 	  <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
-	  <ProjectReference Include="..\MedRecordsWPF\Presentation.csproj" />
+	  <ProjectReference Include="..\MedRecordsWPF\Presentationbu.csproj" />
 	  <ProjectReference Include="..\SharedModels\SharedModels.csproj" />
 	</ItemGroup>
 

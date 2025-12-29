@@ -4,9 +4,16 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+	<DisablePackageSourceMapping>true</DisablePackageSourceMapping>
+	<RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup>
+	<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
+	<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
@@ -18,6 +25,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Configurations\" />
+    <Folder Include="External\" />
+    <Folder Include="Logging\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

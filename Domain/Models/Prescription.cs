@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.Text.Json.Serialization; // ✅ Built-in
 
 // ... (using statements from before)
 namespace Domain.Models
@@ -15,12 +14,10 @@ namespace Domain.Models
 
         // Navigation properties for EF Core:
         public int VisitId { get; set; }
-        [ValidateNever]
         [JsonIgnore]
         public Visit Visit { get; set; }
         // Use this to pull the Brand/Generic name from the master list:
         [ForeignKey("DrugId")]
-        [ValidateNever]
         [JsonIgnore]
         public DrugCatalog DrugCatalog { get; set; }
     }

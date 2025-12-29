@@ -3,11 +3,11 @@
     "Name": "New Profile",
     "Projects": [
       {
-        "Path": "medrecordwebapi\\MedrecordWebAPI.csproj",
+        "Path": "Presentation\\Presentation.csproj",
         "Action": "Start"
       },
       {
-        "Path": "MedRecordsWPF\\Presentation.csproj",
+        "Path": "WPF\\WPF.csproj",
         "Action": "Start"
       }
     ]

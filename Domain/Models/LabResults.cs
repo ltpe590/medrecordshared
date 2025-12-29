@@ -1,26 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Domain.Models
 {
     public class LabResults
     {
         [Key]
         public int LabId { get; set; }
+
+        [Required]
         public int TestId { get; set; }
+
+        [Required]
+        [StringLength(500)]
         public string ResultValue { get; set; }
 
-        // Navigation properties for EF Core:
+        [Required]
         public int VisitId { get; set; }
-        [ValidateNever]
-        [JsonIgnore]
-        public Visit Visit { get; set; }
 
-        // Use this to pull the TestName, Unit, and Range from the master list:
+        // Navigation properties - EF Core handles these
+        public virtual Visit Visit { get; set; }
+
         [ForeignKey("TestId")]
-        [ValidateNever]
-        [JsonIgnore]
-        public TestCatalog TestCatalog { get; set; }
+        public virtual TestCatalog TestCatalog { get; set; }
     }
 }

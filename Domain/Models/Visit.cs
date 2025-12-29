@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding; // <-- THIS IS REQUIRED
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models
 {
@@ -34,8 +29,6 @@ namespace Domain.Models
         // --- Foreign Keys & Navigation Properties ---
         public int PatientId { get; set; }
 
-        [ValidateNever] // <-- The attribute is now recognized
-        [JsonIgnore] // Prevent circular reference during JSON serialization
         public Patient Patient { get; set; } // Navigation property
 
         // Links to the separate Prescriptions and LabResults table
