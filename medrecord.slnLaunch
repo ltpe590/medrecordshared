@@ -7,7 +7,7 @@
         "Action": "Start"
       },
       {
-        "Path": "MedRecordsWPF\\MedRecordsWPF.csproj",
+        "Path": "MedRecordsWPF\\Presentation.csproj",
         "Action": "Start"
       }
     ]
