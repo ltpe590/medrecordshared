@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36804.6
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Medrecord", "medrecordwebapi\Medrecord.csproj", "{CDA11EB0-D6B9-49C7-92DC-C8B6114134E0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedrecordWebAPI", "medrecordwebapi\MedrecordWebAPI.csproj", "{CDA11EB0-D6B9-49C7-92DC-C8B6114134E0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Presentation", "MedRecordsWPF\Presentation.csproj", "{776104F0-C9D0-4237-96FE-4723BF7D0FE8}"
 EndProject
@@ -11,7 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "SharedModel
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
-		medrecordwebapi\Program.cs = medrecordwebapi\Program.cs
+		medrecordwebapi\appsettings.Development.json = medrecordwebapi\appsettings.Development.json
+		medrecordwebapi\appsettings.json = medrecordwebapi\appsettings.json
+		medrecordwebapi\medrecordwebapi.http = medrecordwebapi\medrecordwebapi.http
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1A964582-CF1F-4783-9DF2-7B34EC8967D2}"

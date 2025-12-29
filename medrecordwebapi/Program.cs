@@ -1,4 +1,4 @@
-using SharedModels.Models;
+﻿using SharedModels.Models;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
