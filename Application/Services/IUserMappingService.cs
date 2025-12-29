@@ -1,40 +1,55 @@
-﻿using Domain.Models;
-using Application.DTOs;
+﻿using Application.DTOs; // ✅ Use your existing DTOs
+using Domain.Models;
 
 namespace Application.Services
 {
     public interface IUserMappingService
     {
-        ApplicationUser MapToIdentityUser(User domainUser);
-        User MapToDomainUser(ApplicationUser identityUser);
+        UserDto MapToDto(User domainUser); // ✅ Use your UserDTO
+        User MapToDomain(UserCreateDto dto);
+        UserCreateDto MapToCreateDto(string username, string email, string PhoneNumber, string password);
     }
 
     public class UserMappingService : IUserMappingService
     {
-        public ApplicationUser MapToIdentityUser(User domainUser)
+        public UserDto MapToDto(User domainUser)
         {
-            return new ApplicationUser
+            return new UserDto
             {
+                Id = domainUser.Id.ToString(),
                 UserName = domainUser.Username,
                 Email = domainUser.Email,
-                EmailConfirmed = true,
+                EmailConfirmed = true, // Domain users are confirmed by default
+                PhoneNumber = domainUser.PhoneNumber ?? "",
+                PhoneNumberConfirmed = !string.IsNullOrEmpty(domainUser.PhoneNumber),
                 CreatedAt = domainUser.CreatedAt,
                 LastLoginAt = domainUser.LastLoginAt,
-                // Map fingerprint data if needed
-                // AdditionalIdentityProperties = domainUser.SomeProperty
+                HasFingerprintEnrolled = domainUser.HasFingerprintEnrolled
             };
         }
 
-        public User MapToDomainUser(ApplicationUser identityUser)
+        public User MapToDomain(UserCreateDto dto)
         {
             return new User
             {
-                Username = identityUser.UserName,
-                Email = identityUser.Email,
-                PasswordHash = "managed_by_identity", // Identity handles this
+                Username = dto.UserName,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber,
+                PasswordHash = dto.Password, // This should be hashed before saving
                 IsActive = true,
-                CreatedAt = identityUser.CreatedAt,
-                LastLoginAt = identityUser.LastLoginAt
+                CreatedAt = DateTime.UtcNow,
+                HasFingerprintEnrolled = false
+            };
+        }
+
+        public UserCreateDto MapToCreateDto(string username, string email, string phonenumber, string password)
+        {
+            return new UserCreateDto
+            {
+                UserName = username,
+                Email = email,
+                PhoneNumber = phonenumber,
+                Password = password
             };
         }
     }

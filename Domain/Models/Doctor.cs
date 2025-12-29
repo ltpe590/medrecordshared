@@ -1,29 +1,28 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Domain.Models
 {
     public class Doctor
     {
-        public int DoctorId { get; set; } // Primary Key
+        [Key]
+        public int DoctorId { get; set; }
 
         [Required]
-        public string DoctorName { get; set; } // Combined name field (supports Arabic text)
+        public required string DoctorName { get; set; }
 
-        public string Degree { get; set; } // e.g., M.D., MBBS, Ph.D.
+        public required string Degree { get; set; } // M.b.Ch.B, Ph.D.
 
-        public string Specialty { get; set; } // e.g., Cardiology, Dermatology
+        public required string Specialty { get; set; } // Cardiology, Dermatology
 
-        public string ClinicName { get; set; }
+        public required string ClinicName { get; set; }
 
-        public string ClinicAddress { get; set; }
+        public required string ClinicAddress { get; set; }
 
-        public string ClinicPhoneNumber { get; set; }
+        public required string ClinicPhoneNumber { get; set; }
 
-        // --- Suggestions for future use ---
-        public string Email { get; set; } // Good for system communications
+        public string? Email { get; set; } 
 
-        // Navigation property: EF Core uses this to efficiently load associated medical records
+        // Navigation property
         public ICollection<Visit> MedicalRecords { get; set; } = new List<Visit>();
     }
 }

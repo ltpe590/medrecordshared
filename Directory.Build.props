@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <EfWorkingDirectory>$(MSBuildThisFileDirectory)</EfWorkingDirectory>
+  </PropertyGroup>
+</Project>

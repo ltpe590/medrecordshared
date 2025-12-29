@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using WPF.ViewModels;
 
-namespace MedRecordsWPF
+namespace WPF
 {
     public partial class App : Application
     {

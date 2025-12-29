@@ -7,16 +7,17 @@ namespace Domain.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
         [StringLength(50)]
-        public string Username { get; set; }
+        public required string Username { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string Email { get; set; }
+        public required string Email { get; set; }
+
+        [StringLength(20)]
+        public required string PhoneNumber { get; set; }
 
         [Required]
-        public string PasswordHash { get; set; }
+        public required string PasswordHash { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -26,6 +27,7 @@ namespace Domain.Models
 
         // For fingerprint authentication
         public bool HasFingerprintEnrolled { get; set; }
-        public byte[] FingerprintTemplate { get; set; }
+        public byte[] FingerprintTemplate { get; set; } = Array.Empty<byte>();
+
     }
 }

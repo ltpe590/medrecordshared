@@ -227,34 +227,6 @@ namespace MedRecordsWPF
         #endregion
 
         #region Clean Architecture Integration
-        private async Task LoadAllPatientsAsync()
-        {
-            try
-            {
-                // Use clean architecture repository
-                var patients = await _patientRepository.GetAllAsync();
-
-                _allPatients.Clear();
-                _allPatients.AddRange(patients?.Select(p => new PatientViewModel
-                {
-                    PatientId = p.PatientId,
-                    Name = p.Name ?? "",
-                    DateOfBirth = p.DateOfBirth,
-                    Gender = p.Sex ?? "",
-                    ContactNumber = p.PhoneNumber ?? "",
-                    Address = p.Address ?? ""
-                }) ?? Array.Empty<PatientViewModel>());
-
-                PatientListBox.ItemsSource = _viewModel.FilteredPatients;
-                StatusText.Text = $"Loaded {_allPatients.Count} patients";
-            }
-            catch (Exception ex)
-            {
-                StatusText.Text = $"Error loading patients: {ex.Message}";
-                MessageBox.Show($"Error loading patients: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         private void UpdateSelectedPatientInfo(Patient patient)
         {
             if (patient != null)
@@ -283,7 +255,7 @@ namespace MedRecordsWPF
         }
         #endregion
 
-        #region Your Existing HTTP Methods (Keep all your working code)
+        #region HTTP Methods (Single implementations)
         private async Task TestConnectionAsync()
         {
             _baseUrl = TxtApiUrl.Text.Trim();
@@ -395,13 +367,37 @@ namespace MedRecordsWPF
         {
             try
             {
+                // First try clean architecture repository
+                if (_patientRepository != null)
+                {
+                    var patients = await _patientRepository.GetAllAsync();
+                    if (patients != null && patients.Any())
+                    {
+                        _allPatients.Clear();
+                        _allPatients.AddRange(patients.Select(p => new PatientViewModel
+                        {
+                            PatientId = p.PatientId,
+                            Name = p.Name ?? "",
+                            DateOfBirth = p.DateOfBirth,
+                            Gender = p.Sex ?? "",
+                            ContactNumber = p.PhoneNumber ?? "",
+                            Address = p.Address ?? ""
+                        }));
+
+                        UpdatePatientList();
+                        StatusText.Text = $"Loaded {_allPatients.Count} patients (via repository)";
+                        return;
+                    }
+                }
+
+                // Fallback to HTTP API
                 var response = await _httpClient.GetAsync($"{_baseUrl}/api/Patients");
                 if (!response.IsSuccessStatusCode) return;
 
-                var patients = await response.Content.ReadFromJsonAsync<List<Patient>>(_jsonOptions);
+                var patientsFromApi = await response.Content.ReadFromJsonAsync<List<Patient>>(_jsonOptions);
                 _allPatients.Clear();
 
-                _allPatients.AddRange(patients?.Select(p => new PatientViewModel
+                _allPatients.AddRange(patientsFromApi?.Select(p => new PatientViewModel
                 {
                     PatientId = GetPropertyValue<int>(p, "PatientId"),
                     Name = GetPropertyValue<string>(p, "Name") ?? "",
@@ -412,9 +408,11 @@ namespace MedRecordsWPF
                 }) ?? Array.Empty<PatientViewModel>());
 
                 UpdatePatientList();
+                StatusText.Text = $"Loaded {_allPatients.Count} patients (via API)";
             }
             catch (Exception ex)
             {
+                StatusText.Text = $"Error loading patients: {ex.Message}";
                 MessageBox.Show($"Error loading patients: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -572,48 +570,44 @@ namespace MedRecordsWPF
             TxtNotes.Clear();
         }
 
-        private void InitializeVisitHistory()
-        {
-            HistoryTextBlock.Text = "No patient selected. Please login and select a patient to view visit history.";
-        }
-
         private void LoadVisitHistory(int patientId)
         {
             // Implementation for loading visit history
             HistoryTextBlock.Text = $"Visit history for patient {patientId} will appear here.";
         }
-    }
+        #endregion
 
-    #region Helper Classes
-    public class PatientViewModel
-    {
-        public int PatientId { get; set; }
-        public string Name { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public string Gender { get; set; }
-        public string ContactNumber { get; set; }
-        public string Address { get; set; }
-
-        public string DisplayName => Name;
-        public int Age => AgeConverter.DateOfBirthToAge(DateOfBirth);
-    }
-
-    public class LoginResponse
-    {
-        public string Token { get; set; }
-        public string Message { get; set; }
-        public string UserId { get; set; }
-    }
-
-    public static class AgeConverter
-    {
-        public static int DateOfBirthToAge(DateTime dateOfBirth)
+        #region Helper Classes
+        public class PatientViewModel
         {
-            var today = DateTime.Today;
-            var age = today.Year - dateOfBirth.Year;
-            if (dateOfBirth.Date > today.AddYears(-age)) age--;
-            return age;
+            public int PatientId { get; set; }
+            public string Name { get; set; }
+            public DateTime DateOfBirth { get; set; }
+            public string Gender { get; set; }
+            public string ContactNumber { get; set; }
+            public string Address { get; set; }
+
+            public string DisplayName => Name;
+            public int Age => AgeConverter.DateOfBirthToAge(DateOfBirth);
         }
+
+        public class LoginResponse
+        {
+            public string Token { get; set; }
+            public string Message { get; set; }
+            public string UserId { get; set; }
+        }
+
+        public static class AgeConverter
+        {
+            public static int DateOfBirthToAge(DateTime dateOfBirth)
+            {
+                var today = DateTime.Today;
+                var age = today.Year - dateOfBirth.Year;
+                if (dateOfBirth.Date > today.AddYears(-age)) age--;
+                return age;
+            }
+        }
+        #endregion
     }
-    #endregion
 }

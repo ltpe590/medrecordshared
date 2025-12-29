@@ -11,17 +11,17 @@ namespace Domain.Models
         [Required]
         public int TestId { get; set; }
 
-        [Required]
         [StringLength(500)]
-        public string ResultValue { get; set; }
+        public string ResultValue { get; set; } = string.Empty;
 
         [Required]
         public int VisitId { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation properties - EF Core handles these
-        public virtual Visit Visit { get; set; }
+        // Navigation properties
+        public virtual Visit? Visit { get; set; }
 
         [ForeignKey("TestId")]
-        public virtual TestCatalog TestCatalog { get; set; }
+        public virtual required TestCatalog TestCatalog { get; set; }
     }
 }

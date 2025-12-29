@@ -9,7 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
-	<PackageReference Include="Microsoft.AspNetCore.Identity" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\" />
     <Folder Include="Middleware\" />
     <Folder Include="ViewModels\" />
     <Folder Include="Validators\" />

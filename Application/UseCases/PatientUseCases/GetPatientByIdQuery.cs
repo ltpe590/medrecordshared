@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Application.Interfaces;
+using Application.Interfaces.Repositories;
 using Domain.Models;
 
 namespace Application.UseCases.PatientUseCases

@@ -3,8 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SharedModels.Models;
-using Presentation.Data;
+using Domain.Models;
+using Infrastructure.Data.Context;
 
 namespace Presentation.Controllers
 {

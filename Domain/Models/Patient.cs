@@ -6,15 +6,14 @@ namespace Domain.Models
     {
         public int PatientId { get; set; }
 
-        [Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        public string Sex { get; set; }
+        public string? Sex { get; set; }
 
         [DataType(DataType.Date)]
         public DateTime DateOfBirth { get; set; }
         public int Age => DateTime.Now.Year - DateOfBirth.Year;
-        public string BloodGroup { get; set; }
+        public string? BloodGroup { get; set; }
         public string? Allergies { get; set; }
 
         [DataType(DataType.PhoneNumber)]
@@ -24,7 +23,7 @@ namespace Domain.Models
 
         public string? ShortNote { get; set; }
 
-        public ICollection<Visit> MedicalRecords { get; set; } = new List<Visit>();
+        public virtual ICollection<Visit> Visits { get; set; } = new List<Visit>();
     }
     public static class AgeConverter
     {

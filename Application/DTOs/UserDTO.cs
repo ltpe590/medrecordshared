@@ -5,9 +5,11 @@ namespace Application.DTOs
     public class UserDto
     {
         public string Id { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public bool EmailConfirmed { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
+        public bool PhoneNumberConfirmed { get; set; }  
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public bool HasFingerprintEnrolled { get; set; }
@@ -17,12 +19,15 @@ namespace Application.DTOs
     {
         [Required]
         [StringLength(50)]
-        public string Username { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100, MinimumLength = 6)]
@@ -32,9 +37,11 @@ namespace Application.DTOs
     public class UserResponseDto
     {
         public string Id { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public bool EmailConfirmed { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
+        public bool PhoneNumberConfirmed { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public bool HasFingerprintEnrolled { get; set; }
