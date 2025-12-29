@@ -21,7 +21,6 @@ namespace SharedModels.Models
         public int BloodPressureDiastolic { get; set; }
 
         // --- Patient Status at time of this Visit (Moved here from Patient.cs) ---
-        public string MaritalStatus { get; set; }
         public int Gravida { get; set; }
         public int Para { get; set; }
         public int Abortion { get; set; }

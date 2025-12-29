@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:MedRecordsWPF"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-
+        <!--local:BoolToGridLengthConverter x:Key="BoolToGridLength"/-->
     </Application.Resources>
 </Application>

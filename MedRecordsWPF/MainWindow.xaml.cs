@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -7,60 +9,138 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using SharedModels.Models;
 
 namespace MedRecordsWPF
 {
     public partial class MainWindow : Window
     {
-        private readonly HttpClient _httpClient;
+        private HttpClient _httpClient;
         private string _baseUrl;
         private string _authToken;
         private string _currentUserId;
         private int _currentPatientId;
-        private readonly List<PatientViewModel> _allPatients = new();
+        private List<PatientViewModel> _allPatients = new();
         private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
         public MainWindow()
-{
-    InitializeComponent();
-    InitializeVisitHistory();
-
-    _httpClient = new HttpClient
-    {
-        Timeout = TimeSpan.FromSeconds(30)
-    };
-
-    TxtApiUrl.Text = "https://localhost:7287";
-    var testUrl = $"{TxtApiUrl.Text}/swagger";
-
-    Loaded += async (s, e) =>
-    {
-        await Task.Delay(500);
-
-        // Test connection (swagger only)
-        var test = await _httpClient.GetAsync(testUrl);
-        if (!test.IsSuccessStatusCode)
         {
-            MessageBox.Show("API not reachable");
-            return;
+            InitializeComponent();
+            InitializeVisitHistory();
+            SetupHttpClient();
+            SetupAutoLogin();
         }
 
-        // DEV credentials
-        TxtUsername.Text = "doctor1";
-        TxtPassword.Password = "Password123!";
-
-        // Root URL for API calls
-        _baseUrl = TxtApiUrl.Text.Trim();
-
-        LoginButton_Click(null, null);
-    };
-}
-
-
-        private void InitializeVisitHistory()
+        private void SetupHttpClient()
         {
-            HistoryTextBlock.Text = "No patient selected. Please login and select a patient to view visit history.";
+            _httpClient = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+        }
+
+        private void SetupAutoLogin()
+        {
+            TxtApiUrl.Text = "https://localhost:7287";
+
+            Loaded += async (s, e) =>
+            {
+                await Task.Delay(500);
+                await TestConnectionOnStartup();
+
+                // Set development credentials
+                TxtUsername.Text = "doctor1";
+                TxtPassword.Password = "Password123!";
+
+                // Root URL for API calls
+                _baseUrl = TxtApiUrl.Text.Trim();
+
+                // Auto-login if connection is successful
+                await AttemptAutoLogin();
+            };
+        }
+
+        // Fix for mouse scrolling
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var scrollViewer = (ScrollViewer)sender;
+            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta / 3);
+            e.Handled = true;
+        }
+
+        // Panel toggle methods
+        private void ToggleLeftPanelButton_Click(object sender, RoutedEventArgs e)
+        {
+            LeftPanelBorder.Visibility = LeftPanelBorder.Visibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            if (LeftPanelBorder.Visibility == Visibility.Visible)
+            {
+                MainContentScrollViewer.Margin = new Thickness(410, 0, 0, 0);
+            }
+            else
+            {
+                MainContentScrollViewer.Margin = new Thickness(0);
+            }
+        }
+
+        private void ToggleRightPanelButton_Click(object sender, RoutedEventArgs e)
+        {
+            RightPanelBorder.Visibility = RightPanelBorder.Visibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+
+            if (RightPanelBorder.Visibility == Visibility.Visible)
+            {
+                MainContentScrollViewer.Margin = new Thickness(0, 0, 410, 0);
+            }
+            else
+            {
+                MainContentScrollViewer.Margin = new Thickness(0);
+            }
+        }
+
+        private void CloseLeftPanelButton_Click(object sender, RoutedEventArgs e)
+        {
+            LeftPanelBorder.Visibility = Visibility.Collapsed;
+            MainContentScrollViewer.Margin = new Thickness(0);
+        }
+
+        private void CloseRightPanelButton_Click(object sender, RoutedEventArgs e)
+        {
+            RightPanelBorder.Visibility = Visibility.Collapsed;
+            MainContentScrollViewer.Margin = new Thickness(0);
+        }
+
+        private async Task TestConnectionOnStartup()
+        {
+            var testUrl = $"{TxtApiUrl.Text}/swagger";
+            try
+            {
+                var test = await _httpClient.GetAsync(testUrl);
+                if (!test.IsSuccessStatusCode)
+                {
+                    StatusText.Text = "API not reachable";
+                }
+            }
+            catch
+            {
+                StatusText.Text = "API not reachable";
+            }
+        }
+
+        private async Task AttemptAutoLogin()
+        {
+            try
+            {
+                await PerformLoginAsync();
+            }
+            catch
+            {
+                // Auto-login failed, user will need to login manually
+            }
         }
 
         private async void TestConnectionButton_Click(object sender, RoutedEventArgs e)
@@ -90,23 +170,16 @@ namespace MedRecordsWPF
 
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(TxtUsername.Text) || string.IsNullOrWhiteSpace(TxtPassword.Password))
-            {
-                MessageBox.Show("Please enter both username and password.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            await PerformLoginAsync();
+        }
 
-            if (string.IsNullOrWhiteSpace(_baseUrl))
-            {
-                MessageBox.Show("Please enter API URL and test connection first.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+        private async Task PerformLoginAsync()
+        {
+            if (!ValidateLoginInputs()) return;
 
             try
             {
-                LoginButton.Content = "Logging in...";
-                LoginButton.IsEnabled = false;
-
+                SetLoginButtonState(isLoggingIn: true);
                 var loginRequest = new { Username = TxtUsername.Text, Password = TxtPassword.Password };
                 var content = new StringContent(JsonSerializer.Serialize(loginRequest), Encoding.UTF8, "application/json");
 
@@ -114,21 +187,11 @@ namespace MedRecordsWPF
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(_jsonOptions);
-                    _authToken = loginResponse.Token;
-                    _currentUserId = loginResponse.UserId;
-
-                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
-
-                    LoginExpander.IsExpanded = false;
-                    MessageBox.Show($"Login successful! Welcome, {TxtUsername.Text}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    ShowMainContent();
-                    await LoadAllPatients();
+                    await ProcessSuccessfulLogin(response);
                 }
                 else
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Login failed: {error}", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    await ProcessFailedLogin(response);
                 }
             }
             catch (Exception ex)
@@ -137,75 +200,76 @@ namespace MedRecordsWPF
             }
             finally
             {
-                LoginButton.Content = "Login";
-                LoginButton.IsEnabled = true;
+                SetLoginButtonState(isLoggingIn: false);
             }
         }
 
-        // In MainWindow.xaml.cs, add or replace the existing event handlers:
-
-        // We need a reference to the Grid container to modify column definitions in C#
-        // Add 'x:Name="MainGrid"' to your <Grid> tag in XAML first if you haven't already.
-        // <Grid x:Name="MainGrid"> ... </Grid> 
-
-        private void Expander_Expanded(object sender, RoutedEventArgs e)
+        private bool ValidateLoginInputs()
         {
-            UpdateGridColumns();
-            UpdateMainContentColumnSpan();
-        }
-
-        private void Expander_Collapsed(object sender, RoutedEventArgs e)
-        {
-            UpdateGridColumns();
-            UpdateMainContentColumnSpan();
-        }
-
-        private void UpdateGridColumns()
-        {
-            // Access the actual ColumnDefinitions by their index (0=Left, 1=Main, 2=Right)
-
-            // Left Column (Index 0)
-            if (RegisterExpander.IsExpanded)
+            if (string.IsNullOrWhiteSpace(TxtUsername.Text) || string.IsNullOrWhiteSpace(TxtPassword.Password))
             {
-                // When expanded, set width back to Auto with MinWidth constraint (defined in XAML)
-                MainGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Auto);
+                MessageBox.Show("Please enter both username and password.", "Login Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(_baseUrl))
+            {
+                MessageBox.Show("Please enter API URL and test connection first.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void SetLoginButtonState(bool isLoggingIn)
+        {
+            LoginButton.Content = isLoggingIn ? "Logging in..." : "Login";
+            LoginButton.IsEnabled = !isLoggingIn;
+        }
+
+        private async Task ProcessSuccessfulLogin(HttpResponseMessage response)
+        {
+            var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(_jsonOptions);
+            _authToken = loginResponse.Token;
+            _currentUserId = loginResponse.UserId;
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
+
+            LoginExpander.IsExpanded = false;
+            MessageBox.Show($"Login successful! Welcome, {TxtUsername.Text}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            await LoadAllPatients();
+        }
+
+        private async Task ProcessFailedLogin(HttpResponseMessage response)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            MessageBox.Show($"Login failed: {error}", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void InitializeVisitHistory()
+        {
+            HistoryTextBlock.Text = "No patient selected. Please login and select a patient to view visit history.";
+        }
+
+        private void PatientListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (PatientListBox.SelectedItem is PatientViewModel selectedPatient)
+            {
+                _currentPatientId = selectedPatient.PatientId;
+                UpdateSelectedPatientInfo(selectedPatient);
+                LoadVisitHistory(_currentPatientId);
+                ClearVisitForm();
+
+                // Update Visit Management header
+                VisitManagementPatientRun.Text = $" ({selectedPatient.Name})";
             }
             else
             {
-                // When collapsed, set width explicitly to 0 pixels
-                MainGrid.ColumnDefinitions[0].Width = new GridLength(0);
-            }
-
-            // Right Column (Index 2)
-            if (HistoryExpander.IsExpanded)
-            {
-                // When expanded, set width back to Auto with MinWidth constraint (defined in XAML)
-                MainGrid.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Auto);
-            }
-            else
-            {
-                // When collapsed, set width explicitly to 0 pixels
-                MainGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                VisitManagementPatientRun.Text = "";
             }
         }
 
-        // Keep this method as it was from the previous instructions:
-        private void UpdateMainContentColumnSpan()
-        {
-            int startColumn = RegisterExpander.IsExpanded ? 1 : 0;
-            int endColumn = HistoryExpander.IsExpanded ? 1 : 2;
-            int columnSpan = (endColumn - startColumn) + 1;
-
-            Grid.SetColumn(MainContentScrollViewer, startColumn);
-            Grid.SetColumnSpan(MainContentScrollViewer, columnSpan);
-        }
-
-
-
-        private void ShowMainContent()
-        {
-            MainContentSection.Visibility = Visibility.Visible;
-        }
 
         private async Task LoadAllPatients()
         {
@@ -216,8 +280,7 @@ namespace MedRecordsWPF
 
                 var patients = await response.Content.ReadFromJsonAsync<List<Patient>>(_jsonOptions);
                 _allPatients.Clear();
-                
-                // IDE0301 Fixed: Use AddRange instead of individual Add calls
+
                 _allPatients.AddRange(patients?.Select(p => new PatientViewModel
                 {
                     PatientId = GetPropertyValue<int>(p, "PatientId"),
@@ -259,75 +322,21 @@ namespace MedRecordsWPF
             PatientListBox.ItemsSource = filteredPatients;
         }
 
-        private async void RegisterPatientButton_Click(object sender, RoutedEventArgs e)
+        private void UpdateSelectedPatientInfo(PatientViewModel patient)
         {
-            try
-            {
-                RegisterPatientButton.Content = "Registering...";
-                RegisterPatientButton.IsEnabled = false;
-
-                var patientData = new Dictionary<string, object>
-                {
-                    ["Name"] = TxtPatientName.Text,
-                    ["Sex"] = (CmbPatientGender.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Male",
-                    ["DateOfBirth"] = DatePatientBirth.SelectedDate ?? DateTime.Now.AddYears(-30),
-                    ["PhoneNumber"] = TxtPatientContact.Text,
-                    ["Address"] = TxtPatientAddress.Text,
-                    ["BloodGroup"] = TxtBloodGroup.Text,
-                    ["Allergies"] = TxtAllergies.Text
-                };
-
-                var content = new StringContent(JsonSerializer.Serialize(patientData), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync($"{_baseUrl}/api/Patients", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    MessageBox.Show("Patient registered successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    // IDE0028 Fixed: Use Clear() instead of = ""
-                    TxtPatientName.Clear();
-                    DatePatientBirth.SelectedDate = null;
-                    CmbPatientGender.SelectedIndex = 0;
-                    TxtPatientContact.Clear();
-                    TxtPatientAddress.Clear();
-                    TxtBloodGroup.Clear();
-                    TxtAllergies.Clear();
-
-                    RegisterStatusText.Text = "Patient registered successfully!";
-                    await LoadAllPatients();
-                    ShowMainContent();
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Failed to register patient: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error registering patient: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                RegisterPatientButton.Content = "Register Patient";
-                RegisterPatientButton.IsEnabled = true;
-            }
+            SelectedPatientBorder.Visibility = Visibility.Visible;
+            SelectedPatientInfo.Text = patient.Name;
+            SelectedPatientDetails.Text =
+                $"Age: {patient.Age} | Gender: {patient.Gender} | Contact: {patient.ContactNumber}";
         }
 
-        private void PatientListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ClearVisitForm()
         {
-            if (PatientListBox.SelectedItem is PatientViewModel selectedPatient)
-            {
-                _currentPatientId = selectedPatient.PatientId;
-                SelectedPatientInfo.Text = selectedPatient.Name;
-                SelectedPatientDetails.Text = $"Age: {selectedPatient.Age} | Gender: {selectedPatient.Gender} | Contact: {selectedPatient.ContactNumber}";
-                LoadVisitHistory(_currentPatientId);
-                TxtDiagnosis.Clear();
-                TxtNotes.Clear();
-            }
+            TxtDiagnosis.Clear();
+            TxtNotes.Clear();
         }
 
-        private async Task LoadVisitHistory(int patientId)
+        private async void LoadVisitHistory(int patientId)
         {
             try
             {
@@ -336,29 +345,12 @@ namespace MedRecordsWPF
 
                 var allVisits = await response.Content.ReadFromJsonAsync<List<Visit>>(_jsonOptions);
                 var patientVisits = allVisits?.Where(v => GetPropertyValue<int>(v, "PatientId") == patientId)
-                                               .OrderByDescending(v => GetPropertyValue<DateTime>(v, "CreatedAt") != default ? GetPropertyValue<DateTime>(v, "CreatedAt") : GetPropertyValue<DateTime>(v, "VisitDate"))
+                                               .OrderByDescending(v => GetPropertyValue<DateTime>(v, "CreatedAt") != default ?
+                                                   GetPropertyValue<DateTime>(v, "CreatedAt") :
+                                                   GetPropertyValue<DateTime>(v, "VisitDate"))
                                                .ToList() ?? new List<Visit>();
 
-                // IDE0037 Fixed: Use var instead of explicit type
-                var historyText = new StringBuilder("PATIENT VISIT HISTORY:\n\n");
-                int visitCount = 0;
-
-                foreach (var visit in patientVisits)
-                {
-                    visitCount++;
-                    var date = GetPropertyValue<DateTime>(visit, "CreatedAt") != default ? GetPropertyValue<DateTime>(visit, "CreatedAt") : GetPropertyValue<DateTime>(visit, "VisitDate");
-                    var diagnosis = GetPropertyValue<string>(visit, "Diagnosis") ?? "";
-                    var notes = GetPropertyValue<string>(visit, "Notes") ?? "";
-
-                    historyText.AppendLine($"Visit #{visitCount} - {date:yyyy-MM-dd HH:mm}");
-                    historyText.AppendLine($"Diagnosis: {diagnosis}");
-                    if (!string.IsNullOrWhiteSpace(notes))
-                        historyText.AppendLine($"Notes: {notes}");
-                    historyText.AppendLine(new string('-', 50));
-                    historyText.AppendLine();
-                }
-
-                HistoryTextBlock.Text = visitCount == 0 ? "No previous visits found for this patient." : historyText.ToString();
+                DisplayVisitHistory(patientVisits);
             }
             catch (Exception ex)
             {
@@ -366,50 +358,56 @@ namespace MedRecordsWPF
             }
         }
 
-        private async void SaveVisitButton_Click(object sender, RoutedEventArgs e)
+        private void DisplayVisitHistory(List<Visit> patientVisits)
         {
-            if (_currentPatientId == 0)
+            var historyText = new StringBuilder("PATIENT VISIT HISTORY:\n\n");
+            int visitCount = 0;
+
+            foreach (var visit in patientVisits)
             {
-                MessageBox.Show("Please select a patient first.", "No Patient Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                visitCount++;
+                var date = GetPropertyValue<DateTime>(visit, "CreatedAt") != default ?
+                    GetPropertyValue<DateTime>(visit, "CreatedAt") :
+                    GetPropertyValue<DateTime>(visit, "VisitDate");
+                var diagnosis = GetPropertyValue<string>(visit, "Diagnosis") ?? "";
+                var notes = GetPropertyValue<string>(visit, "Notes") ?? "";
+
+                historyText.AppendLine($"Visit #{visitCount} - {date:yyyy-MM-dd HH:mm}");
+                historyText.AppendLine($"Diagnosis: {diagnosis}");
+                if (!string.IsNullOrWhiteSpace(notes))
+                    historyText.AppendLine($"Notes: {notes}");
+                historyText.AppendLine(new string('-', 50));
+                historyText.AppendLine();
             }
 
-            if (string.IsNullOrWhiteSpace(TxtDiagnosis.Text))
+            HistoryTextBlock.Text = visitCount == 0 ? "No previous visits found for this patient." : historyText.ToString();
+
+            // Auto-open right panel when patient is selected
+            if (visitCount > 0 && RightPanelBorder.Visibility != Visibility.Visible)
             {
-                MessageBox.Show("Please enter a diagnosis.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                ToggleRightPanelButton_Click(null, null);
             }
+        }
+
+        private async void SaveVisitButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ValidateVisitInputs()) return;
 
             try
             {
-                SaveVisitButton.Content = "Saving...";
-                SaveVisitButton.IsEnabled = false;
+                SetSaveVisitButtonState(isSaving: true);
 
-                var visitData = new Dictionary<string, object>
-                {
-                    ["PatientId"] = _currentPatientId,
-                    ["Diagnosis"] = TxtDiagnosis.Text,
-                    ["Notes"] = TxtNotes.Text,
-                    ["CreatedAt"] = DateTime.Now
-                };
-
-                if (!string.IsNullOrEmpty(_currentUserId))
-                    visitData["DoctorId"] = _currentUserId;
-
+                var visitData = CreateVisitData();
                 var content = new StringContent(JsonSerializer.Serialize(visitData), Encoding.UTF8, "application/json");
                 var response = await _httpClient.PostAsync($"{_baseUrl}/api/Visits", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    MessageBox.Show("Visit saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    await LoadVisitHistory(_currentPatientId);
-                    TxtDiagnosis.Clear();
-                    TxtNotes.Clear();
+                    ProcessSuccessfulVisitSave();
                 }
                 else
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    MessageBox.Show($"Failed to save visit: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    await ProcessFailedVisitSave(response);
                 }
             }
             catch (Exception ex)
@@ -418,17 +416,147 @@ namespace MedRecordsWPF
             }
             finally
             {
-                SaveVisitButton.Content = "Save Visit";
-                SaveVisitButton.IsEnabled = true;
+                SetSaveVisitButtonState(isSaving: false);
             }
         }
 
-        private void AddNewPatientButton_Click(object sender, RoutedEventArgs e)
+        private bool ValidateVisitInputs()
         {
-            MainContentSection.Visibility = Visibility.Collapsed;
+            if (_currentPatientId == 0)
+            {
+                MessageBox.Show("Please select a patient first.", "No Patient Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(TxtDiagnosis.Text))
+            {
+                MessageBox.Show("Please enter a diagnosis.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
         }
 
-        private void CancelRegisterButton_Click(object sender, RoutedEventArgs e)
+        private void SetSaveVisitButtonState(bool isSaving)
+        {
+            SaveVisitButton.Content = isSaving ? "Saving..." : "Save Visit";
+            SaveVisitButton.IsEnabled = !isSaving;
+        }
+
+        private Dictionary<string, object> CreateVisitData()
+        {
+            var visitData = new Dictionary<string, object>
+            {
+                ["PatientId"] = _currentPatientId,
+                ["Diagnosis"] = TxtDiagnosis.Text,
+                ["Notes"] = TxtNotes.Text,
+                ["CreatedAt"] = DateTime.Now
+            };
+
+            if (!string.IsNullOrEmpty(_currentUserId))
+                visitData["DoctorId"] = _currentUserId;
+
+            return visitData;
+        }
+
+        private void ProcessSuccessfulVisitSave()
+        {
+            MessageBox.Show("Visit saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            LoadVisitHistory(_currentPatientId);
+            ClearVisitForm();
+        }
+
+        private async Task ProcessFailedVisitSave(HttpResponseMessage response)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            MessageBox.Show($"Failed to save visit: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private async void RegisterPatientButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ValidateRegistrationInputs()) return;
+
+            try
+            {
+                SetRegisterButtonState(isRegistering: true);
+
+                var patientData = CreatePatientRegistrationData();
+                var content = new StringContent(JsonSerializer.Serialize(patientData), Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/Patients", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    await ProcessSuccessfulRegistration();
+                }
+                else
+                {
+                    await ProcessFailedRegistration(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error registering patient: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SetRegisterButtonState(isRegistering: false);
+            }
+        }
+
+        private bool ValidateRegistrationInputs()
+        {
+            if (string.IsNullOrWhiteSpace(TxtPatientName.Text))
+            {
+                MessageBox.Show("Please enter patient name.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (DatePatientBirth.SelectedDate == null)
+            {
+                MessageBox.Show("Please select date of birth.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void SetRegisterButtonState(bool isRegistering)
+        {
+            RegisterPatientButton.Content = isRegistering ? "Registering..." : "Register Patient";
+            RegisterPatientButton.IsEnabled = !isRegistering;
+        }
+
+        private Dictionary<string, object> CreatePatientRegistrationData()
+        {
+            return new Dictionary<string, object>
+            {
+                ["Name"] = TxtPatientName.Text,
+                ["Sex"] = (CmbPatientGender.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Male",
+                ["DateOfBirth"] = DatePatientBirth.SelectedDate ?? DateTime.Now.AddYears(-30),
+                ["PhoneNumber"] = TxtPatientContact.Text,
+                ["Address"] = TxtPatientAddress.Text,
+                ["BloodGroup"] = TxtBloodGroup.Text,
+                ["Allergies"] = TxtAllergies.Text
+            };
+        }
+
+        private async Task ProcessSuccessfulRegistration()
+        {
+            MessageBox.Show("Patient registered successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            ClearRegistrationForm();
+            RegisterStatusText.Text = "Patient registered successfully!";
+            await LoadAllPatients();
+            CloseLeftPanelButton_Click(null, null);
+        }
+
+        private async Task ProcessFailedRegistration(HttpResponseMessage response)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            MessageBox.Show($"Failed to register patient: {error}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void ClearRegistrationForm()
         {
             TxtPatientName.Clear();
             DatePatientBirth.SelectedDate = null;
@@ -439,12 +567,23 @@ namespace MedRecordsWPF
             TxtPatientAddress.Clear();
             TxtBloodGroup.Clear();
             TxtAllergies.Clear();
+        }
+
+        private void AddNewPatientButton_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleLeftPanelButton_Click(null, null);
+        }
+
+        private void CancelRegisterButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClearRegistrationForm();
             RegisterStatusText.Text = "Registration canceled.";
+            CloseLeftPanelButton_Click(null, null);
         }
 
         private void RefreshPatientsButton_Click(object sender, RoutedEventArgs e)
         {
-            LoadAllPatients();
+            _ = LoadAllPatients();
         }
 
         private void TxtPatientSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -452,7 +591,6 @@ namespace MedRecordsWPF
             UpdatePatientList();
         }
 
-        // ViewModel classes
         public class PatientViewModel
         {
             public int PatientId { get; set; }
@@ -472,5 +610,19 @@ namespace MedRecordsWPF
             public string Message { get; set; }
             public string UserId { get; set; }
         }
+
+        public static class AgeConverter
+        {
+            public static int DateOfBirthToAge(DateTime dateOfBirth)
+            {
+                var today = DateTime.Today;
+                var age = today.Year - dateOfBirth.Year;
+                if (dateOfBirth.Date > today.AddYears(-age)) age--;
+                return age;
+            }
+        }
     }
+
+    //public class Patient { }
+    //public class Visit { }
 }
