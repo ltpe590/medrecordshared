@@ -62,7 +62,7 @@ namespace WPF.ViewModels
                 ? Patients
                 : Patients.Where(p =>
                     p.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
-                    p.PhoneNumber?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true).ToList();
+                    p.PhoneNumber?.Value.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true).ToList();
 
         public MainViewModel(IPatientRepository patientRepository)
         {

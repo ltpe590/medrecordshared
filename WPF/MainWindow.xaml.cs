@@ -1,9 +1,11 @@
-﻿using Core.Interfaces.Services;
-using Core.DTOs;
+﻿using Core.DTOs;
+using Core.Helpers;
+using Core.Interfaces.Services;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using WPF.Configuration;
 using WPF.ViewModels;
 
@@ -139,13 +141,13 @@ namespace WPF
 
             try
             {
-                var visit = new VisitDto(
-                    PatientId: _viewModel.SelectedPatient?.PatientId ?? 0,
-                    Diagnosis: TxtDiagnosis.Text,
-                    Notes: TxtNotes.Text,
-                    CreatedAt: DateTime.Now,
-                    DoctorId: _currentUserId);
-
+                var visit = new VisitDto
+                {
+                    PatientId = _viewModel.SelectedPatient?.PatientId ?? 0,
+                    DateOfVisit = DateTime.UtcNow,
+                    Diagnosis = TxtDiagnosis.Text,
+                    Notes = TxtNotes.Text
+                };
                 await _userService.SaveVisitAsync(visit, _settings.ApiBaseUrl, _authToken);
                 MessageBox.Show("Visit saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 ClearVisitForm();
@@ -214,7 +216,7 @@ namespace WPF
             var filtered = _allPatients.Where(p =>
                 string.IsNullOrWhiteSpace(searchText) ||
                 p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                p.ContactNumber?.Contains(searchText, StringComparison.OrdinalIgnoreCase) == true).ToList();
+                p.PhoneNumber?.Contains(searchText, StringComparison.OrdinalIgnoreCase) == true).ToList();
 
             PatientListBox.ItemsSource = filtered.OrderBy(p => p.Name);
         }
@@ -242,6 +244,35 @@ namespace WPF
         {
             if (FindName("LeftPanelBorder") is UIElement left) left.Visibility = IsLeftPanelVisible ? Visibility.Visible : Visibility.Collapsed;
             if (FindName("RightPanelBorder") is UIElement right) right.Visibility = IsRightPanelVisible ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /* ---- Missing handlers wired by XAML ---- */
+        private void CloseRightPanelButton_Click(object sender, RoutedEventArgs e) =>
+            IsRightPanelVisible = false;
+
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            // optional scroll-speed tweak
+        }
+
+        private void TestConnectionButton_Click(object sender, RoutedEventArgs e)
+        {
+            // ping API & show result
+        }
+
+        private void TxtPatientSearch_TextChanged(object sender, TextChangedEventArgs e) =>
+            UpdatePatientList();
+
+        private void AddNewPatientButton_Click(object sender, RoutedEventArgs e) =>
+            IsLeftPanelVisible = true;
+
+        private void CloseLeftPanelButton_Click(object sender, RoutedEventArgs e) =>
+            IsLeftPanelVisible = false;
+
+        private void CancelRegisterButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClearRegistrationForm();
+            IsLeftPanelVisible = false;
         }
 
         /* =========================================================

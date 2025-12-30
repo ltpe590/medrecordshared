@@ -26,12 +26,6 @@ namespace Core.Services
             return response.Token;
         }
 
-        public async Task CreatePatientAsync(PatientCreateDto patient, string baseUrl, string token)
-        {
-            _api.SetAuthToken(token);
-            await _api.PostAsync<PatientCreateDto, object>($"{baseUrl}/api/Patients", patient);
-        }
-
         public async Task<List<PatientDto>> GetPatientsAsync(string baseUrl, string token)
         {
             _api.SetAuthToken(token);
@@ -39,15 +33,21 @@ namespace Core.Services
             return patients;
         }
 
+        public async Task CreatePatientAsync(PatientCreateDto patient, string baseUrl, string token)
+        {
+            _api.SetAuthToken(token);
+            await _api.PostAsync<PatientCreateDto, object>($"{baseUrl}/api/Patients", patient);
+        }
+        public async Task<List<VisitDto>> GetVisitsByPatientAsync(int patientId, string baseUrl, string token)
+        {
+            _api.SetAuthToken(token);
+            return await _api.GetAsync<List<VisitDto>>($"{baseUrl}/api/Visits/patient/{patientId}");
+        }
+
         public async Task SaveVisitAsync(VisitDto visit, string baseUrl, string token)
         {
             _api.SetAuthToken(token);
             await _api.PostAsync<VisitDto, object>($"{baseUrl}/api/Visits", visit);
-        }
-
-        public Task CreatePatientAsync(PatientDto patient, string baseUrl, string token)
-        {
-            throw new NotImplementedException();
         }
     }
 }
