@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Application.Interfaces.Repositories;
+﻿using Core.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Data.Context;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -22,24 +22,31 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(t => t.TestId == testId);
         }
 
-        public async Task<IEnumerable<TestCatalog>> GetAllAsync()
+        public async Task<List<TestCatalog>> GetAllAsync()
         {
             return await _context.TestCatalogs.ToListAsync();
         }
 
-        public Task<TestCatalog> AddAsync(TestCatalog testCatalog)
+        public async Task AddAsync(TestCatalog testCatalog)
         {
-            throw new NotImplementedException();
+            await _context.TestCatalogs.AddAsync(testCatalog);
+            await _context.SaveChangesAsync();
         }
 
-        public Task UpdateAsync(TestCatalog testCatalog)
+        public async Task UpdateAsync(TestCatalog testCatalog)
         {
-            throw new NotImplementedException();
+            _context.TestCatalogs.Update(testCatalog);
+            await _context.SaveChangesAsync();
         }
 
-        public Task DeleteAsync(int testId)
+        public async Task<bool> DeleteAsync(int testId)
         {
-            throw new NotImplementedException();
+            var test = await GetByIdAsync(testId);
+            if (test == null) return false;
+
+            _context.TestCatalogs.Remove(test);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

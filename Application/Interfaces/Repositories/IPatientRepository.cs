@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Domain.Models;
+﻿using Domain.Models;
 
-namespace Application.Interfaces.Repositories
+namespace Core.Interfaces.Repositories
 {
     public interface IPatientRepository
     {

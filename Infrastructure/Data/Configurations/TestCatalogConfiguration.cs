@@ -3,7 +3,7 @@ using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Data.Context.Configurations
+namespace Infrastructure.Data.Configurations
 {
     public class TestCatalogConfiguration : IEntityTypeConfiguration<TestCatalog>
     {

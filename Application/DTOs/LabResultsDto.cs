@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Application.DTOs
+﻿namespace Core.DTOs
 {
     public class LabResultsDto
     {

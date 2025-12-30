@@ -1,7 +1,7 @@
-﻿using Application.DTOs; // ✅ Use your existing DTOs
+﻿using Core.DTOs;
 using Domain.Models;
 
-namespace Application.Services
+namespace Core.Services
 {
     public interface IUserMappingService
     {

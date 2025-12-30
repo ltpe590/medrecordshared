@@ -1,8 +1,7 @@
-﻿using System.Threading.Tasks;
-using Application.Interfaces.Repositories;
+﻿using Core.Interfaces.Repositories;
 using Domain.Models;
 
-namespace Application.UseCases.PatientUseCases
+namespace Core.UseCases.PatientUseCases
 {
     public class GetPatientByIdQuery
     {

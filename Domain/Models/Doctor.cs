@@ -20,7 +20,7 @@ namespace Domain.Models
 
         public required string ClinicPhoneNumber { get; set; }
 
-        public string? Email { get; set; } 
+        public string? Email { get; set; }
 
         // Navigation property
         public ICollection<Visit> MedicalRecords { get; set; } = new List<Visit>();

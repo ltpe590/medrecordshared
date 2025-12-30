@@ -1,4 +1,4 @@
-﻿namespace Presentation.Models
+﻿namespace Core.DTOs
 {
     public class TestCatalogDto
     {

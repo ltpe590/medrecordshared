@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace Domain.Models
 {
@@ -13,9 +12,9 @@ namespace Domain.Models
         // Navigation properties
         public int VisitId { get; set; }
         public required Visit Visit { get; set; }
-        
+
         [ForeignKey("DrugId")]
-        
+
         public required DrugCatalog DrugCatalog { get; set; }
     }
 }

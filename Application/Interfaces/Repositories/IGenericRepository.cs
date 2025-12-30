@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Domain.Models; // Ensure this matches your Domain layer namespace
-
-namespace Application.Interfaces.Repositories
+﻿namespace Core.Interfaces.Repositories
 {
     public interface IGenericRepository<T> where T : class
     {

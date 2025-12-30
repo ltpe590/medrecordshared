@@ -1,9 +1,8 @@
 ﻿// Application/Services/ILabResultsMappingService.cs
-using System.Threading.Tasks;
-using Application.DTOs;
+using Core.DTOs;
 using Domain.Models;
 
-namespace Application.Services
+namespace Core.Services
 {
     public interface ILabResultsMappingService
     {

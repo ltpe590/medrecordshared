@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Application.UseCases.PatientUseCases;
-using Application.Interfaces.Repositories;
+﻿using Core.Interfaces.Repositories;
+using Core.UseCases.PatientUseCases;
 using Domain.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Controllers
 {

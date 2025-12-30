@@ -1,11 +1,9 @@
 ﻿// Application/Services/LabResultsMappingService.cs
-using System;
-using System.Threading.Tasks;
-using Application.DTOs;
-using Application.Interfaces.Repositories;
+using Core.DTOs;
+using Core.Interfaces.Repositories;
 using Domain.Models;
 
-namespace Application.Services
+namespace Core.Services
 {
     public class LabResultsMappingService : ILabResultsMappingService
     {

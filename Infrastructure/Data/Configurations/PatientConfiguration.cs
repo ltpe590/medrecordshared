@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Data.Context.Configurations
+namespace Infrastructure.Data.Configurations
 {
     public class PatientConfiguration : IEntityTypeConfiguration<Patient>
     {

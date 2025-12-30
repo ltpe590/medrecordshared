@@ -1,15 +1,10 @@
-﻿// Application/Interfaces/Repositories/ITestCatalogRepository.cs
-using System.Threading.Tasks;
-using Domain.Models;
+﻿using Domain.Models;
 
-namespace Application.Interfaces.Repositories
+public interface ITestCatalogRepository
 {
-    public interface ITestCatalogRepository
-    {
-        Task<TestCatalog> GetByIdAsync(int testId);
-        Task<IEnumerable<TestCatalog>> GetAllAsync();
-        Task<TestCatalog> AddAsync(TestCatalog testCatalog);
-        Task UpdateAsync(TestCatalog testCatalog);
-        Task DeleteAsync(int testId);
-    }
+    Task<TestCatalog> GetByIdAsync(int testId);
+    Task<List<TestCatalog>> GetAllAsync();
+    Task AddAsync(TestCatalog testCatalog);
+    Task UpdateAsync(TestCatalog testCatalog);
+    Task<bool> DeleteAsync(int testId);
 }

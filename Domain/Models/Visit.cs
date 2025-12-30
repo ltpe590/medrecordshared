@@ -34,7 +34,7 @@ namespace Domain.Models
 
         public required Patient Patient { get; set; } // Navigation property
 
-       
+
         public ICollection<Prescription> Prescriptions { get; set; } = new List<Prescription>();
         public ICollection<LabResults> LabResults { get; set; } = new List<LabResults>();
     }

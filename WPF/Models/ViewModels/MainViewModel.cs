@@ -1,13 +1,13 @@
-﻿using Application.Interfaces;
-using Application.Interfaces.Repositories;
+﻿using Core.Interfaces.Repositories;
 using Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace WPF.ViewModels
+namespace WPF.Models.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
@@ -33,10 +33,7 @@ namespace WPF.ViewModels
             {
                 _selectedPatient = value;
                 OnPropertyChanged();
-                if (value != null)
-                {
-                    IsRightPanelVisible = true;
-                }
+                IsRightPanelVisible = value != null;
             }
         }
 
@@ -55,7 +52,7 @@ namespace WPF.ViewModels
         public string SearchText
         {
             get => _searchText;
-            set { _searchText = value; OnPropertyChanged(); FilterPatients(); }
+            set { _searchText = value; OnPropertyChanged(); OnPropertyChanged(nameof(FilteredPatients)); }
         }
 
         public string StatusMessage
@@ -68,9 +65,8 @@ namespace WPF.ViewModels
             string.IsNullOrWhiteSpace(SearchText)
                 ? Patients
                 : Patients.Where(p =>
-                    (p.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (p.PhoneNumber?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false)
-                ).ToList();
+                    p.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                    p.PhoneNumber?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true).ToList();
 
         public MainViewModel(IPatientRepository patientRepository)
         {
@@ -89,19 +85,12 @@ namespace WPF.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error loading patients: {ex.Message}";
+                StatusMessage = $"Error: {ex.Message}";
             }
         }
 
-        private void FilterPatients()
-        {
-            OnPropertyChanged(nameof(FilteredPatients));
-        }
-
         public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

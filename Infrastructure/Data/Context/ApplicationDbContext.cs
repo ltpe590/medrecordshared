@@ -1,5 +1,6 @@
 ﻿using Domain.Models;
-using Infrastructure.Data.Context.Configurations;
+using Infrastructure.Data.Configurations;
+using Infrastructure.Data.Seeding;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data.Context
@@ -22,14 +23,13 @@ namespace Infrastructure.Data.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            // Just configure entities directly for now
-            modelBuilder.Entity<Patient>().ToTable("Patients");
-            modelBuilder.Entity<Visit>().ToTable("Visits");
-            modelBuilder.Entity<LabResults>().ToTable("LabResults");
-            modelBuilder.Entity<TestCatalog>().ToTable("TestCatalogs");
-            modelBuilder.Entity<DrugCatalog>().ToTable("DrugCatalogs");
-            modelBuilder.Entity<Prescription>().ToTable("Prescriptions");
-            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.ApplyConfiguration(new PatientConfiguration());
+            modelBuilder.ApplyConfiguration(new VisitConfiguration());
+            modelBuilder.ApplyConfiguration(new LabResultsConfiguration());
+            modelBuilder.ApplyConfiguration(new TestCatalogConfiguration());
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+
+            TestCatalogSeeder.SeedTestCatalogs(modelBuilder);
         }
     }
 }

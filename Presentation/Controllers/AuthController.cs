@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Presentation.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Presentation.Models;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration; // Add this using statement
 
 namespace Presentation.Controllers
 {
@@ -59,11 +57,13 @@ namespace Presentation.Controllers
             {
                 var user = await _userManager.FindByNameAsync(model.Username);
                 var token = GenerateJwtToken(user);
-                return Ok(new {
+                return Ok(new
+                {
                     Token = token,
                     UserId = user.Id,
                     Username = user.UserName,
-                    Message = "Login successful" });
+                    Message = "Login successful"
+                });
             }
             return Unauthorized(new { Message = "Invalid username or password" });
         }
