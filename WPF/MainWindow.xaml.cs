@@ -1,184 +1,209 @@
-﻿using Core.Interfaces.Repositories;
+﻿using Core.DTOs;
+using Core.Services;
 using Domain.Models;
+using Infrastructure.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
+using WPF.Configuration;
 using WPF.Helpers;
-using WPF.Models;
 using WPF.Models.ViewModels;
-using WPF.Services;
 
 namespace WPF
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        // ✅ UI-Only Dependencies
         private readonly MainViewModel _viewModel;
-        private readonly IPatientRepository _patientRepository;
-        private readonly ApiService _apiService;
-        private readonly PatientService _patientService;
+        private readonly IUserService _userService;
+        private readonly IApiConnectionProvider _api;
+        private readonly AppSettings _settings;
 
-        private string _baseUrl;
-        private string _authToken;
-        private string _currentUserId;
+        // ✅ UI State
+        private string _authToken = "";
+        private string _currentUserId = "";
         private List<PatientViewModel> _allPatients = new();
 
         public bool IsLeftPanelVisible { get; set; }
         public bool IsRightPanelVisible { get; set; }
 
-        public MainWindow(MainViewModel viewModel, IPatientRepository patientRepository)
+        // ✅ DI Constructor - NO business logic!
+        public MainWindow(
+            MainViewModel viewModel,
+            IUserService userService,
+            IApiConnectionProvider api,
+            AppSettings settings)
         {
             InitializeComponent();
             _viewModel = viewModel;
-            _patientRepository = patientRepository;
+            _userService = userService;
+            _api = api;
+            _settings = settings;
 
-            _apiService = new ApiService(new HttpClient { Timeout = TimeSpan.FromSeconds(30) });
-            _patientService = new PatientService(_patientRepository, _apiService);
-
-            DataContext = this;
+            DataContext = _viewModel;
             SetupDefaults();
             SetupEvents();
-            AttemptAutoLogin();
         }
 
+        /* =========================================================
+         * 1. UI SETUP (NO BUSINESS LOGIC)
+         * =======================================================*/
         private void SetupDefaults()
         {
-            TxtApiUrl.Text = "https://localhost:7287";
-            TxtUsername.Text = "doctor1";
-            TxtPassword.Password = "Password123!";
+            TxtApiUrl.Text = _settings.ApiBaseUrl;
+            TxtUsername.Text = _settings.DefaultUser;
+            TxtPassword.Password = _settings.DefaultPassword;
             IsLeftPanelVisible = false;
             IsRightPanelVisible = false;
         }
 
         private void SetupEvents() => _viewModel.PropertyChanged += OnSelectedPatientChanged;
 
-        private async void AttemptAutoLogin()
-        {
-            await Task.Delay(500);
-            await TestConnectionAsync();
-            await PerformLoginAsync();
-        }
+        /* =========================================================
+         * 2. UI EVENT HANDLERS (1-LINERS)
+         * =======================================================*/
+        // ✅ All business logic moved to services
+        private async void LoginButton_Click(object sender, RoutedEventArgs e) =>
+            await LoginAsync();
 
-        private async Task TestConnectionAsync()
-        {
-            try
-            {
-                await _apiService.GetAsync<string>($"{TxtApiUrl.Text}/swagger");
-            }
-            catch
-            {
-                StatusText.Text = "API not reachable";
-            }
-        }
+        private async void RefreshPatientsButton_Click(object sender, RoutedEventArgs e) =>
+            await RefreshPatientsAsync();
 
-        // === EVENT HANDLERS (Added all missing ones) ===
+        private async void SaveVisitButton_Click(object sender, RoutedEventArgs e) =>
+            await SaveVisitAsync();
 
-        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            var scrollViewer = sender as ScrollViewer;
-            if (scrollViewer != null)
-            {
-                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta / 3);
-                e.Handled = true;
-            }
-        }
+        private async void RegisterPatientButton_Click(object sender, RoutedEventArgs e) =>
+            await RegisterPatientAsync();
 
-        private async void TestConnectionButton_Click(object sender, RoutedEventArgs e)
+        // ✅ UI-only navigation
+        private void ToggleLeftPanelButton_Click(object sender, RoutedEventArgs e) =>
+            IsLeftPanelVisible = !IsLeftPanelVisible;
+
+        private void ToggleRightPanelButton_Click(object sender, RoutedEventArgs e) =>
+            IsRightPanelVisible = !IsRightPanelVisible;
+
+        private void PatientListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+            _viewModel.SelectedPatient = PatientListBox.SelectedItem as Patient;
+
+        /* =========================================================
+         * 3. BUSINESS WORKFLOWS (MOVED TO SERVICES)
+         * =======================================================*/
+        private async Task LoginAsync()
         {
             try
             {
-                await _apiService.GetAsync<string>($"{TxtApiUrl.Text}/");
-                MessageBox.Show("API connection successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                StatusText.Text = "Connected to API";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Cannot connect to API: {ex.Message}", "Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                StatusText.Text = "Connection error";
-            }
-        }
+                _authToken = await _userService.LoginAsync(
+                    TxtUsername.Text,
+                    TxtPassword.Password,
+                    _settings.ApiBaseUrl);
 
-        private void TxtPatientSearch_TextChanged(object sender, TextChangedEventArgs e) => UpdatePatientList();
-
-        private void AddNewPatientButton_Click(object sender, RoutedEventArgs e) => IsLeftPanelVisible = true;
-
-        private async void SaveVisitButton_Click(object sender, RoutedEventArgs e) => await SaveVisitAsync();
-
-        private void CloseLeftPanelButton_Click(object sender, RoutedEventArgs e) => IsLeftPanelVisible = false;
-
-        private async void RegisterPatientButton_Click(object sender, RoutedEventArgs e) => await RegisterPatientAsync();
-
-        private void CancelRegisterButton_Click(object sender, RoutedEventArgs e)
-        {
-            IsLeftPanelVisible = false;
-            ClearRegistrationForm();
-        }
-
-        private void CloseRightPanelButton_Click(object sender, RoutedEventArgs e) => IsRightPanelVisible = false;
-
-        private async void LoginButton_Click(object sender, RoutedEventArgs e) => await PerformLoginAsync();
-
-        private async Task PerformLoginAsync()
-        {
-            if (!ValidateLogin()) return;
-
-            try
-            {
-                SetLoginUI(true);
-                _baseUrl = TxtApiUrl.Text.Trim();
-                var response = await _apiService.PostAsync<object, LoginResponse>(
-                    $"{_baseUrl}/api/Auth/login",
-                    new { Username = TxtUsername.Text, Password = TxtPassword.Password });
-
-                _authToken = response.Token;
-                _currentUserId = response.UserId;
-                _apiService.SetAuthToken(_authToken);
-
+                _api.SetAuthToken(_authToken);
                 LoginExpander.IsExpanded = false;
                 MessageBox.Show($"Welcome, {TxtUsername.Text}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                await LoadPatientsAsync();
+                await RefreshPatientsAsync();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Login failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally
-            {
-                SetLoginUI(false);
-            }
         }
 
-        private bool ValidateLogin() =>
-            !string.IsNullOrWhiteSpace(TxtUsername.Text) &&
-            !string.IsNullOrWhiteSpace(TxtPassword.Password) &&
-            !string.IsNullOrWhiteSpace(TxtApiUrl.Text);
-
-        private void SetLoginUI(bool isLoggingIn)
-        {
-            LoginButton.IsEnabled = !isLoggingIn;
-            LoginButton.Content = isLoggingIn ? "Logging in..." : "Login";
-        }
-
-        private async void RefreshPatientsButton_Click(object sender, RoutedEventArgs e) => await LoadPatientsAsync();
-
-        private async Task LoadPatientsAsync()
+        private async Task RefreshPatientsAsync()
         {
             try
             {
-                _allPatients = await _patientService.LoadPatientsAsync();
+                var patients = await _userService.GetPatientsAsync(_settings.ApiBaseUrl, _authToken);
+                _allPatients = patients;
+                UpdatePatientList();
+                StatusText.Text = $"Loaded {patients.Count} patients";
             }
-            catch
+            catch (Exception ex)
             {
-                _allPatients = await _patientService.LoadPatientsFromApiAsync(_baseUrl);
+                StatusText.Text = $"Error: {ex.Message}";
             }
-            UpdatePatientList();
-            StatusText.Text = $"Loaded {_allPatients.Count} patients";
+            ";
+            }
+        }
+
+        private async Task SaveVisitAsync()
+        {
+            if (string.IsNullOrWhiteSpace(TxtDiagnosis.Text))
+            {
+                MessageBox.Show("Please enter a diagnosis.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var visit = new VisitDto(
+                    PatientId: _viewModel.SelectedPatient?.PatientId ?? 0,
+                    Diagnosis: TxtDiagnosis.Text,
+                    Notes: TxtNotes.Text,
+                    CreatedAt: DateTime.Now,
+                    DoctorId: _currentUserId);
+
+                await _userService.SaveVisitAsync(visit, _settings.ApiBaseUrl, _authToken);
+                MessageBox.Show("Visit saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                ClearVisitForm();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving visit: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task RegisterPatientAsync()
+        {
+            if (string.IsNullOrWhiteSpace(TxtPatientName.Text))
+            {
+                MessageBox.Show("Please enter patient name.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var patient = new PatientCreateDto(
+                    Name: TxtPatientName.Text,
+                    Sex: CmbPatientGender.SelectedItem?.ToString() ?? "Male",
+                    DateOfBirth: DatePatientBirth.SelectedDate ?? DateTime.Now.AddYears(-30),
+                    PhoneNumber: TxtPatientContact.Text,
+                    Address: TxtPatientAddress.Text,
+                    BloodGroup: TxtBloodGroup.Text,
+                    Allergies: TxtAllergies.Text);
+
+                await _userService.CreatePatientAsync(patient, _settings.ApiBaseUrl, _authToken);
+                MessageBox.Show("Patient registered successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                ClearRegistrationForm();
+                await RefreshPatientsAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error registering patient: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /* =========================================================
+         * 4. UI HELPERS (NO BUSINESS LOGIC)
+         * =======================================================*/
+        private void ClearRegistrationForm()
+        {
+            TxtPatientName.Clear();
+            DatePatientBirth.SelectedDate = null;
+            CmbPatientGender.SelectedIndex = 0;
+            TxtPatientContact.Clear();
+            TxtPatientAddress.Clear();
+            TxtBloodGroup.Clear();
+            TxtAllergies.Clear();
+        }
+
+        private void ClearVisitForm()
+        {
+            TxtDiagnosis.Clear();
+            TxtNotes.Clear();
         }
 
         private void UpdatePatientList()
@@ -217,92 +242,9 @@ namespace WPF
             if (FindName("RightPanelBorder") is UIElement right) right.Visibility = IsRightPanelVisible ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        // === ADDITIONAL HELPER METHODS ===
-
-        private async Task SaveVisitAsync()
-        {
-            if (string.IsNullOrWhiteSpace(TxtDiagnosis.Text))
-            {
-                MessageBox.Show("Please enter a diagnosis.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                var visitData = new Dictionary<string, object>
-                {
-                    ["PatientId"] = _viewModel.SelectedPatient?.PatientId ?? 0,
-                    ["Diagnosis"] = TxtDiagnosis.Text,
-                    ["Notes"] = TxtNotes.Text,
-                    ["CreatedAt"] = DateTime.Now
-                };
-
-                if (!string.IsNullOrEmpty(_currentUserId))
-                    visitData["DoctorId"] = _currentUserId;
-
-                await _apiService.PostAsync<object, object>($"{_baseUrl}/api/Visits", visitData);
-                MessageBox.Show("Visit saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                TxtDiagnosis.Clear();
-                TxtNotes.Clear();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error saving visit: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private async Task RegisterPatientAsync()
-        {
-            if (string.IsNullOrWhiteSpace(TxtPatientName.Text))
-            {
-                MessageBox.Show("Please enter patient name.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                var patientData = new Dictionary<string, object>
-                {
-                    ["Name"] = TxtPatientName.Text,
-                    ["Sex"] = CmbPatientGender.SelectedItem?.ToString() ?? "Male",
-                    ["DateOfBirth"] = DatePatientBirth.SelectedDate ?? DateTime.Now.AddYears(-30),
-                    ["PhoneNumber"] = TxtPatientContact.Text,
-                    ["Address"] = TxtPatientAddress.Text,
-                    ["BloodGroup"] = TxtBloodGroup.Text,
-                    ["Allergies"] = TxtAllergies.Text
-                };
-
-                await _apiService.PostAsync<object, object>($"{_baseUrl}/api/Patients", patientData);
-                MessageBox.Show("Patient registered successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                IsLeftPanelVisible = false;
-                ClearRegistrationForm();
-                await LoadPatientsAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error registering patient: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void ClearRegistrationForm()
-        {
-            TxtPatientName.Clear();
-            DatePatientBirth.SelectedDate = null;
-            CmbPatientGender.SelectedIndex = 0;
-            TxtPatientContact.Clear();
-            TxtPatientAddress.Clear();
-            TxtBloodGroup.Clear();
-            TxtAllergies.Clear();
-        }
-
-        // === PANEL TOGGLE EVENTS ===
-        private void ToggleLeftPanelButton_Click(object sender, RoutedEventArgs e) => IsLeftPanelVisible = !IsLeftPanelVisible;
-        private void ToggleRightPanelButton_Click(object sender, RoutedEventArgs e) => IsRightPanelVisible = !IsRightPanelVisible;
-        private void PatientListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => _viewModel.SelectedPatient = PatientListBox.SelectedItem as Patient;
-
-        // === PROPERTY CHANGED ===
+        /* =========================================================
+         * 5. PROPERTY CHANGED
+         * =======================================================*/
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

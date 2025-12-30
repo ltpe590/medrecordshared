@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Core.DTOs;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using WPF.Models;
 
-namespace WPF.Services
+namespace Core.Services
 {
     public class LoginService
     {

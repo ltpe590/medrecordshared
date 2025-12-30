@@ -4,9 +4,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace WPF.Services
+namespace Infrastructure.Http
 {
-    public class ApiService
+    public class ApiService : IApiConnectionProvider
     {
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };

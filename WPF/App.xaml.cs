@@ -1,12 +1,12 @@
 ﻿using Core.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Data.Context;
+using Infrastructure.Http;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using WPF.Models.ViewModels;
-using WPF.Services;
 
 namespace WPF
 {
@@ -30,7 +30,10 @@ namespace WPF
         {
             // Database
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer("Server=localhost;Database=MedRecordsDB;Trusted_Connection=true;TrustServerCertificate=true;"));
+            options.UseSqlServer("Server=localhost;Database=MedRecordsDB;Trusted_Connection=true;TrustServerCertificate=true;"));
+            
+            // Add HTTP client with Infrastructure services
+            services.AddHttpClient<IApiConnectionProvider, ApiService>();
 
             // Repositories
             services.AddScoped<IPatientRepository, PatientRepository>();
@@ -40,9 +43,13 @@ namespace WPF
 
             // Services
             services.AddHttpClient<ApiService>();
-            services.AddScoped<PatientService>();
+            services.AddHttpClient<LoginService>();
+            services.AddScoped<AppSettings>();
             services.AddScoped<LoginService>();
-
+            services.AddScoped<LoginService>();
+            services.AddScoped<PatientService>();
+            
+            
             // ViewModels
             services.AddScoped<MainViewModel>();
 

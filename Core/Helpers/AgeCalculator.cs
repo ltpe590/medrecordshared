@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WPF.Helpers
+namespace Core.Helpers
 {
     public static class AgeCalculator
     {

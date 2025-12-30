@@ -1,12 +1,7 @@
 ﻿using Core.Interfaces.Repositories;
 using Domain.Models;
-using WPF.Models.ViewModels;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using static WPF.MainWindow;
-
-namespace WPF.Services
+using Infrastructure.Http;
+namespace Core.Services
 {
     public class PatientService
     {

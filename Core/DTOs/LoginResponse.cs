@@ -1,4 +1,4 @@
-﻿namespace WPF.Models
+﻿namespace Core.DTOs
 {
     public class LoginResponse
     {

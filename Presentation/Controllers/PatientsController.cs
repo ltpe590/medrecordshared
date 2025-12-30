@@ -3,7 +3,7 @@ using Core.UseCases.PatientUseCases;
 using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Presentation.Controllers
+namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

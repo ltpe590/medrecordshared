@@ -11,14 +11,16 @@
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
-    <ProjectReference Include="..\Presentation\Presentation.csproj" />
+    <ProjectReference Include="..\Presentation\WebApi.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Configuration\" />
     <Folder Include="Controls\" />
     <Folder Include="Converters\" />
     <Folder Include="Commands\" />
     <Folder Include="Resources\" />
+    <Folder Include="Services\" />
     <Folder Include="Views\" />
   </ItemGroup>
 
