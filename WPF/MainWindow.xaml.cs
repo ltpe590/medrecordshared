@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using WPF.Configuration;
 using WPF.Helpers;
-using WPF.Models.ViewModels;
+using WPF.ViewModels;
 
 namespace WPF
 {

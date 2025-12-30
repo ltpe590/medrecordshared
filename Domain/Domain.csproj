@@ -8,8 +8,7 @@
 
 	<ItemGroup>
 		<Folder Include="Exceptions\" />
-		<Folder Include="Models\Aggregates\" />
-		<Folder Include="Models\ValueObjects\" />
+		<Folder Include="Aggregates\" />
 	</ItemGroup>
 
 </Project>

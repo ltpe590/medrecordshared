@@ -1,7 +1,9 @@
+using Core.Interfaces;
 using Core.Interfaces.Repositories;
 using Core.Services;
 using Domain.Models;
 using Infrastructure.Data.Context;
+using Infrastructure.Http;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add repository pattern
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+builder.Services.AddSingleton<IPatientHttpClient, PatientHttpClient>();
 
 // Add other services
 builder.Services.AddScoped<IGenericRepository<Patient>, IGenericRepository<Patient>>();

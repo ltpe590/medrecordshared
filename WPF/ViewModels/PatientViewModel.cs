@@ -1,7 +1,7 @@
 ﻿using System;
 using WPF.Helpers;
 
-namespace WPF.Models.ViewModels
+namespace WPF.ViewModels
 {
     public class PatientViewModel
     {

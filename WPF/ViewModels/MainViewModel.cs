@@ -7,7 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace WPF.Models.ViewModels
+namespace WPF.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {

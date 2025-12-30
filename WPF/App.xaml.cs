@@ -1,4 +1,5 @@
-﻿using Core.Interfaces.Repositories;
+﻿using Core.Interfaces;
+using Core.Interfaces.Repositories;
 using Domain.Models;
 using Infrastructure.Data.Context;
 using Infrastructure.Http;
@@ -6,7 +7,7 @@ using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
-using WPF.Models.ViewModels;
+using WPF.ViewModels;
 
 namespace WPF
 {
@@ -34,6 +35,7 @@ namespace WPF
             
             // Add HTTP client with Infrastructure services
             services.AddHttpClient<IApiConnectionProvider, ApiService>();
+            builder.Services.AddSingleton<IPatientHttpClient, PatientHttpClient>();
 
             // Repositories
             services.AddScoped<IPatientRepository, PatientRepository>();

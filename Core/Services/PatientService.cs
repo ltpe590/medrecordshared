@@ -1,39 +1,17 @@
-﻿using Core.Interfaces.Repositories;
-using Domain.Models;
-using Infrastructure.Http;
-namespace Core.Services
+﻿using Core.DTOs;
+using Core.Interfaces;
+
+namespace Core.Services;
+
+public sealed class PatientService
 {
-    public class PatientService
+    private readonly IPatientHttpClient _client;
+
+    public PatientService(IPatientHttpClient client)
     {
-        private readonly IPatientRepository _repository;
-        private readonly ApiService _apiService;
-
-        public PatientService(IPatientRepository repository, ApiService apiService)
-        {
-            _repository = repository;
-            _apiService = apiService;
-        }
-
-        public async Task<List<PatientViewModel>> LoadPatientsAsync()
-        {
-            var patients = await _repository.GetAllAsync();
-            return patients.Select(ToViewModel).ToList();
-        }
-
-        public async Task<List<PatientViewModel>> LoadPatientsFromApiAsync(string baseUrl)
-        {
-            var patients = await _apiService.GetAsync<List<Patient>>($"{baseUrl}/api/Patients");
-            return patients.Select(ToViewModel).ToList();
-        }
-
-        private static PatientViewModel ToViewModel(Patient p) => new()
-        {
-            PatientId = p.PatientId,
-            Name = p.Name ?? "",
-            DateOfBirth = p.DateOfBirth,
-            Gender = p.Sex ?? "",
-            ContactNumber = p.PhoneNumber ?? "",
-            Address = p.Address ?? ""
-        };
+        _client = client;
     }
+
+    public async Task<PatientDto?> LoadAsync(int id)
+        => await _client.GetPatientAsync(id);
 }
