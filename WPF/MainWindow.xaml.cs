@@ -1,6 +1,5 @@
 ﻿using Core.Interfaces.Services;
-using Core.Helpers;
-using Domain.Models;
+using Core.DTOs;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -109,10 +108,20 @@ namespace WPF
         {
             try
             {
-                var patients = await _userService.GetPatientsAsync(_settings.ApiBaseUrl, _authToken);
-                _allPatients = patients;
+                var dtos = await _userService.GetPatientsAsync(_settings.ApiBaseUrl, _authToken);
+
+                _allPatients = dtos.Select(d => new PatientViewModel
+                {
+                    PatientId = d.PatientId,
+                    Name = d.Name,
+                    Sex = d.Sex,
+                    DateOfBirth = d.DateOfBirth,
+                    PhoneNumber = d.PhoneNumber,
+                    Address = d.Address
+                }).ToList();
+
                 UpdatePatientList();
-                StatusText.Text = $"Loaded {patients.Count} patients";
+                StatusText.Text = $"Loaded {_allPatients.Count} patients";
             }
             catch (Exception ex)
             {
@@ -157,14 +166,16 @@ namespace WPF
 
             try
             {
-                var patient = new PatientCreateDto(
-                    Name: TxtPatientName.Text,
-                    Sex: CmbPatientGender.SelectedItem?.ToString() ?? "Male",
-                    DateOfBirth: DatePatientBirth.SelectedDate ?? DateTime.Now.AddYears(-30),
-                    PhoneNumber: TxtPatientContact.Text,
-                    Address: TxtPatientAddress.Text,
-                    BloodGroup: TxtBloodGroup.Text,
-                    Allergies: TxtAllergies.Text);
+                var patient = new PatientCreateDto
+                {
+                    Name = TxtPatientName.Text,
+                    Sex = CmbPatientGender.SelectedItem?.ToString() ?? "Female",
+                    DateOfBirth = DateOnly.FromDateTime(DatePatientBirth.SelectedDate ?? DateTime.Now.AddYears(-30)),
+                    PhoneNumber = TxtPatientContact.Text,
+                    Address = TxtPatientAddress.Text,
+                    BloodGroup = TxtBloodGroup.Text,
+                    Allergies = TxtAllergies.Text
+                };
 
                 await _userService.CreatePatientAsync(patient, _settings.ApiBaseUrl, _authToken);
                 MessageBox.Show("Patient registered successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);

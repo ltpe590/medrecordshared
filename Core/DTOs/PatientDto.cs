@@ -1,46 +1,22 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Core.DTOs
 {
-    /// <summary>
-    /// Flat data-transfer object for patient information.
-    /// </summary>
-    public class PatientDto
+    public sealed class PatientDto
     {
-        public int PatientId { get; set; }
+        public int PatientId { get; init; }
 
-        [Required]
-        [StringLength(100)]
-        public string Name { get; set; } = string.Empty;
+        [Required, StringLength(100)]
+        public string Name { get; init; } = string.Empty;
 
-        [StringLength(10)]
-        public string? Sex { get; set; }
+        public string? Sex { get; init; }
+        public DateTime DateOfBirth { get; init; }
 
-        /// <summary>
-        /// Date of birth as UTC DateOnly (yyyy-MM-dd).
-        /// </summary>
-        [DataType(DataType.Date)]
-        public DateOnly DateOfBirth { get; set; }
-
-        /// <summary>
-        /// Computed age (no setter – calculated on the fly).
-        /// </summary>
-        public int Age => DateTime.UtcNow.Year - DateOfBirth.Year;
-
-        [StringLength(5)]
-        public string? BloodGroup { get; set; }
-
-        [StringLength(500)]
-        public string? Allergies { get; set; }
-
-        [Phone]
-        [StringLength(25)]
-        public string? PhoneNumber { get; set; }
-
-        [StringLength(250)]
-        public string? Address { get; set; }
-
-        [StringLength(500)]
-        public string? ShortNote { get; set; }
+        public string? BloodGroup { get; init; }
+        public string? Allergies { get; init; }
+        public string? PhoneNumber { get; init; }
+        public string? Address { get; init; }
+        public string? ShortNote { get; init; }
     }
 }
