@@ -1,12 +1,12 @@
 ﻿using Core.DTOs;
-using System.Collections.Generic;
+using Core.Interfaces.Services;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-namespace Core.Services
+namespace Infrastructure.Services
 {
-    public class LoginService
+    public sealed class LoginService : ILoginService
     {
         private readonly HttpClient _httpClient;
 

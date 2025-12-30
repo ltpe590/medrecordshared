@@ -1,19 +1,23 @@
 ﻿using Core.Interfaces;
 using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
+using Core.Services;
 using Domain.Models;
 using Infrastructure.Data.Context;
 using Infrastructure.Http;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using WPF.Configuration;
 using WPF.ViewModels;
 
 namespace WPF
 {
     public partial class App : Application
     {
-        public static IServiceProvider ServiceProvider { get; private set; }
+        public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -29,33 +33,35 @@ namespace WPF
 
         private void ConfigureServices(IServiceCollection services)
         {
-            // Database
+            // 1. Database
             services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer("Server=localhost;Database=MedRecordsDB;Trusted_Connection=true;TrustServerCertificate=true;"));
-            
-            // Add HTTP client with Infrastructure services
-            services.AddHttpClient<IApiConnectionProvider, ApiService>();
-            builder.Services.AddSingleton<IPatientHttpClient, PatientHttpClient>();
+                options.UseSqlServer(
+                    "Server=localhost;Database=MedRecordsDB;Trusted_Connection=true;TrustServerCertificate=true;"));
 
-            // Repositories
+            // 2. HTTP clients
+            services.AddHttpClient<ILoginService, LoginService>();
+            services.AddHttpClient<IApiConnectionProvider, ApiService>();
+            services.AddHttpClient<IPatientHttpClient, PatientHttpClient>();
+
+            // 3. HTTP-abstraction registration
+            services.AddSingleton<AppSettings>();
+            services.AddSingleton<IPatientHttpClient, PatientHttpClient>();
+
+            // 4. Repositories
             services.AddScoped<IPatientRepository, PatientRepository>();
             services.AddScoped<ITestCatalogRepository, TestCatalogRepository>();
             services.AddScoped<IGenericRepository<Patient>, GenericRepository<Patient>>();
             services.AddScoped<IGenericRepository<Visit>, GenericRepository<Visit>>();
+            services.AddScoped<ILabResultsMappingService, LabResultsMappingService>();
 
-            // Services
-            services.AddHttpClient<ApiService>();
-            services.AddHttpClient<LoginService>();
+            // 5. Services
             services.AddScoped<AppSettings>();
             services.AddScoped<LoginService>();
-            services.AddScoped<LoginService>();
             services.AddScoped<PatientService>();
-            
-            
-            // ViewModels
-            services.AddScoped<MainViewModel>();
+            services.AddScoped<IUserService, UserService>();
 
-            // Windows
+            // 6. ViewModels / Windows
+            services.AddScoped<MainViewModel>();
             services.AddScoped<MainWindow>();
         }
     }

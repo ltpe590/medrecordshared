@@ -1,40 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Domain.Models;
+using Domain.ValueObjects;
 
-namespace Domain.Models
+public class Patient
 {
-    public class Patient
+    public int PatientId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Sex { get; set; }
+    private string? _phoneNumber;
+    public PhoneNumber? PhoneNumber
     {
-        public int PatientId { get; set; }
-
-        public string Name { get; set; } = string.Empty;
-
-        public string? Sex { get; set; }
-
-        [DataType(DataType.Date)]
-        public DateTime DateOfBirth { get; set; }
-        public int Age => DateTime.Now.Year - DateOfBirth.Year;
-        public string? BloodGroup { get; set; }
-        public string? Allergies { get; set; }
-
-        [DataType(DataType.PhoneNumber)]
-        public string? PhoneNumber { get; set; }
-
-        public string? Address { get; set; }
-
-        public string? ShortNote { get; set; }
-
-        public virtual ICollection<Visit> Visits { get; set; } = new List<Visit>();
+        get => _phoneNumber is null ? null : new PhoneNumber(_phoneNumber);
+        set => _phoneNumber = value?.Value;
     }
-    public static class AgeConverter
-    {
-        public static DateTime AgeToDateOfBirth(int age)
-        {
-            return DateTime.Today.AddYears(-age);
-        }
-
-        public static int DateOfBirthToAge(DateTime dateOfBirth)
-        {
-            return DateTime.Now.Year - dateOfBirth.Year;
-        }
-    }
+    public string? BloodGroup { get; set; }
+    public string? Allergies { get; set; }
+    public string? Address { get; set; }
+    public string? ShortNote { get; set; }
+    public DateTime DateOfBirth { get; set; }
+    public virtual ICollection<Visit> Visits { get; set; } = new List<Visit>();
 }

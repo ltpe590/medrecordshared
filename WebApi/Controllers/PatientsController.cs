@@ -1,7 +1,7 @@
-﻿using Core.Interfaces.Repositories;
-using Core.UseCases.PatientUseCases;
-using Domain.Models;
+﻿using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
+using Core.Interfaces.Repositories;
+using Core.UseCases.PatientUseCases;
 
 namespace WebApi.Controllers
 {

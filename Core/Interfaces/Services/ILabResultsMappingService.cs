@@ -2,7 +2,7 @@
 using Core.DTOs;
 using Domain.Models;
 
-namespace Core.Services
+namespace Core.Interfaces.Services
 {
     public interface ILabResultsMappingService
     {

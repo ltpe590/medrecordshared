@@ -1,8 +1,7 @@
-﻿using System.Net.Http;
+﻿using Core.Interfaces.Services;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Http
 {

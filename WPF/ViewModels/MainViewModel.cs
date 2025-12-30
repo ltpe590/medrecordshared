@@ -1,11 +1,7 @@
 ﻿using Core.Interfaces.Repositories;
 using Domain.Models;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace WPF.ViewModels
 {

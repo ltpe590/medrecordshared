@@ -1,7 +1,4 @@
-﻿using System.Net.Http;
-using System.Threading.Tasks;
-
-namespace Infrastructure.Http
+﻿namespace Core.Interfaces.Services
 {
     public interface IApiConnectionProvider
     {

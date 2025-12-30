@@ -1,6 +1,4 @@
-﻿using Domain.Entities;
-using Domain.Models;
-using System;
+﻿using Domain.Models;
 
 namespace Domain.Events
 {

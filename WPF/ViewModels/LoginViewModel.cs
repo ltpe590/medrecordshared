@@ -1,7 +1,6 @@
-﻿using Core.DTOs;
-using Core.Services;
-using System.Net.Http;
+﻿using System.Net.Http;
 using WPF.Configuration;
+using Infrastructure.Services;
 
 public class LoginViewModel
 {

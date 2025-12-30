@@ -1,11 +1,12 @@
-using Core.Interfaces;
-using Core.Interfaces.Repositories;
-using Core.Services;
 using Domain.Models;
 using Infrastructure.Data.Context;
 using Infrastructure.Http;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Core.Interfaces;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
+using Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,29 +1,24 @@
-﻿using Core.DTOs;
-using Core.Services;
+﻿using Core.Interfaces.Services;
+using Core.Helpers;
 using Domain.Models;
-using Infrastructure.Http;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using WPF.Configuration;
-using WPF.Helpers;
 using WPF.ViewModels;
 
 namespace WPF
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        // ✅ UI-Only Dependencies
+        // UI-Only Dependencies
         private readonly MainViewModel _viewModel;
         private readonly IUserService _userService;
         private readonly IApiConnectionProvider _api;
         private readonly AppSettings _settings;
 
-        // ✅ UI State
+        // UI State
         private string _authToken = "";
         private string _currentUserId = "";
         private List<PatientViewModel> _allPatients = new();
@@ -31,7 +26,7 @@ namespace WPF
         public bool IsLeftPanelVisible { get; set; }
         public bool IsRightPanelVisible { get; set; }
 
-        // ✅ DI Constructor - NO business logic!
+        // DI Constructor - NO business logic!
         public MainWindow(
             MainViewModel viewModel,
             IUserService userService,
@@ -49,9 +44,7 @@ namespace WPF
             SetupEvents();
         }
 
-        /* =========================================================
-         * 1. UI SETUP (NO BUSINESS LOGIC)
-         * =======================================================*/
+        // 1. UI SETUP (NO BUSINESS LOGIC) //
         private void SetupDefaults()
         {
             TxtApiUrl.Text = _settings.ApiBaseUrl;
@@ -124,8 +117,6 @@ namespace WPF
             catch (Exception ex)
             {
                 StatusText.Text = $"Error: {ex.Message}";
-            }
-            ";
             }
         }
 
@@ -233,7 +224,7 @@ namespace WPF
             SelectedPatientBorder.Visibility = Visibility.Visible;
             SelectedPatientInfo.Text = patient.Name;
             SelectedPatientDetails.Text =
-                $"Age: {AgeCalculator.Calculate(patient.DateOfBirth)} | Gender: {patient.Sex} | Contact: {patient.PhoneNumber}";
+                $"Age: {AgeCalculator.FromDateOfBirth(patient.DateOfBirth)} | Gender: {patient.Sex} | Contact: {patient.PhoneNumber}";
         }
 
         private void UpdatePanelVisibility()
