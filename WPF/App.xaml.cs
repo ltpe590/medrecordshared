@@ -59,6 +59,7 @@ namespace WPF
             services.AddScoped<LoginService>();
             services.AddScoped<PatientService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IUserMappingService, UserMappingService>();
 
             // 6. ViewModels / Windows
             services.AddScoped<MainViewModel>();

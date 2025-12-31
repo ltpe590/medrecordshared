@@ -1,7 +1,10 @@
 ﻿using Core.DTOs;
 using Core.Helpers;
 using Core.Interfaces.Services;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,59 +16,46 @@ namespace WPF
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        // UI-Only Dependencies
-        private readonly MainViewModel _viewModel;
         private readonly IUserService _userService;
-        private readonly IApiConnectionProvider _api;
         private readonly AppSettings _settings;
-
-        // UI State
         private string _authToken = "";
-        private string _currentUserId = "";
         private List<PatientViewModel> _allPatients = new();
 
-        public bool IsLeftPanelVisible { get; set; }
-        public bool IsRightPanelVisible { get; set; }
-
-        // DI Constructor - NO business logic!
-        public MainWindow(
-            MainViewModel viewModel,
-            IUserService userService,
-            IApiConnectionProvider api,
-            AppSettings settings)
+        private bool _isLeftVisible, _isRightVisible;
+        public bool IsLeftPanelVisible
         {
-            InitializeComponent();
-            _viewModel = viewModel;
-            _userService = userService;
-            _api = api;
-            _settings = settings;
-
-            DataContext = _viewModel;
-            SetupDefaults();
-            SetupEvents();
+            get => _isLeftVisible;
+            set { _isLeftVisible = value; OnPropertyChanged(); UpdatePanel(LeftPanelBorder, value); }
+        }
+        public bool IsRightPanelVisible
+        {
+            get => _isRightVisible;
+            set { _isRightVisible = value; OnPropertyChanged(); UpdatePanel(RightPanelBorder, value); }
         }
 
-        // 1. UI SETUP (NO BUSINESS LOGIC) //
+        public MainWindow(IUserService userService, AppSettings settings)
+        {
+            InitializeComponent();
+            _userService = userService;
+            _settings = settings;
+            SetupDefaults();
+        }
+
         private void SetupDefaults()
         {
-            TxtApiUrl.Text = _settings.ApiBaseUrl;
-            TxtUsername.Text = _settings.DefaultUser;
-            TxtPassword.Password = _settings.DefaultPassword;
+            TxtApiUrl.Text = _settings.ApiBaseUrl ?? "";
+            TxtUsername.Text = _settings.DefaultUser ?? "";
+            TxtPassword.Password = _settings.DefaultPassword ?? "";
             IsLeftPanelVisible = false;
             IsRightPanelVisible = false;
         }
 
-        private void SetupEvents() => _viewModel.PropertyChanged += OnSelectedPatientChanged;
-
-        /* =========================================================
-         * 2. UI EVENT HANDLERS (1-LINERS)
-         * =======================================================*/
-        // ✅ All business logic moved to services
+        /* ------------------  EVENT HANDLERS  ------------------ */
         private async void LoginButton_Click(object sender, RoutedEventArgs e) =>
             await LoginAsync();
 
         private async void RefreshPatientsButton_Click(object sender, RoutedEventArgs e) =>
-            await RefreshPatientsAsync();
+            await LoadPatientsAsync();
 
         private async void SaveVisitButton_Click(object sender, RoutedEventArgs e) =>
             await SaveVisitAsync();
@@ -73,32 +63,53 @@ namespace WPF
         private async void RegisterPatientButton_Click(object sender, RoutedEventArgs e) =>
             await RegisterPatientAsync();
 
-        // ✅ UI-only navigation
         private void ToggleLeftPanelButton_Click(object sender, RoutedEventArgs e) =>
             IsLeftPanelVisible = !IsLeftPanelVisible;
 
         private void ToggleRightPanelButton_Click(object sender, RoutedEventArgs e) =>
             IsRightPanelVisible = !IsRightPanelVisible;
 
-        private void PatientListBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
-            _viewModel.SelectedPatient = PatientListBox.SelectedItem as Patient;
+        private void CloseLeftPanelButton_Click(object sender, RoutedEventArgs e) =>
+            IsLeftPanelVisible = false;
 
-        /* =========================================================
-         * 3. BUSINESS WORKFLOWS (MOVED TO SERVICES)
-         * =======================================================*/
+        private void CloseRightPanelButton_Click(object sender, RoutedEventArgs e) =>
+            IsRightPanelVisible = false;
+
+        private void TxtPatientSearch_TextChanged(object sender, TextChangedEventArgs e) =>
+            UpdatePatientList();
+
+        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            // optional scroll tweak
+        }
+        /* ---- Missing handlers wired by XAML ---- */
+        private void TestConnectionButton_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: ping API & show result
+        }
+
+        private void PatientListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // TODO: load visits / update detail pane
+        }
+
+        private void AddNewPatientButton_Click(object sender, RoutedEventArgs e) =>
+            IsLeftPanelVisible = true;
+
+        private void CancelRegisterButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClearRegistrationForm();
+            IsLeftPanelVisible = false;
+        }
+
+        /* ------------------  BUSINESS WORKFLOWS  ------------------ */
         private async Task LoginAsync()
         {
             try
             {
-                _authToken = await _userService.LoginAsync(
-                    TxtUsername.Text,
-                    TxtPassword.Password,
-                    _settings.ApiBaseUrl);
-
-                _api.SetAuthToken(_authToken);
-                LoginExpander.IsExpanded = false;
-                MessageBox.Show($"Welcome, {TxtUsername.Text}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                await RefreshPatientsAsync();
+                _authToken = await _userService.LoginAsync(TxtUsername.Text, TxtPassword.Password, _settings.ApiBaseUrl);
+                MessageBox.Show("Login successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                await LoadPatientsAsync();
             }
             catch (Exception ex)
             {
@@ -106,12 +117,11 @@ namespace WPF
             }
         }
 
-        private async Task RefreshPatientsAsync()
+        private async Task LoadPatientsAsync()
         {
             try
             {
                 var dtos = await _userService.GetPatientsAsync(_settings.ApiBaseUrl, _authToken);
-
                 _allPatients = dtos.Select(d => new PatientViewModel
                 {
                     PatientId = d.PatientId,
@@ -121,40 +131,11 @@ namespace WPF
                     PhoneNumber = d.PhoneNumber,
                     Address = d.Address
                 }).ToList();
-
                 UpdatePatientList();
-                StatusText.Text = $"Loaded {_allPatients.Count} patients";
             }
             catch (Exception ex)
             {
                 StatusText.Text = $"Error: {ex.Message}";
-            }
-        }
-
-        private async Task SaveVisitAsync()
-        {
-            if (string.IsNullOrWhiteSpace(TxtDiagnosis.Text))
-            {
-                MessageBox.Show("Please enter a diagnosis.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                var visit = new VisitDto
-                {
-                    PatientId = _viewModel.SelectedPatient?.PatientId ?? 0,
-                    DateOfVisit = DateTime.UtcNow,
-                    Diagnosis = TxtDiagnosis.Text,
-                    Notes = TxtNotes.Text
-                };
-                await _userService.SaveVisitAsync(visit, _settings.ApiBaseUrl, _authToken);
-                MessageBox.Show("Visit saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                ClearVisitForm();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error saving visit: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -182,7 +163,7 @@ namespace WPF
                 await _userService.CreatePatientAsync(patient, _settings.ApiBaseUrl, _authToken);
                 MessageBox.Show("Patient registered successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 ClearRegistrationForm();
-                await RefreshPatientsAsync();
+                await LoadPatientsAsync();
             }
             catch (Exception ex)
             {
@@ -190,9 +171,34 @@ namespace WPF
             }
         }
 
-        /* =========================================================
-         * 4. UI HELPERS (NO BUSINESS LOGIC)
-         * =======================================================*/
+        private async Task SaveVisitAsync()
+        {
+            if (string.IsNullOrWhiteSpace(TxtDiagnosis.Text))
+            {
+                MessageBox.Show("Please enter a diagnosis.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var visit = new VisitDto
+                {
+                    PatientId = (PatientListBox.SelectedItem as PatientViewModel)?.PatientId ?? 0,
+                    DateOfVisit = DateTime.UtcNow,
+                    Diagnosis = TxtDiagnosis.Text,
+                    Notes = TxtNotes.Text
+                };
+                await _userService.SaveVisitAsync(visit, _settings.ApiBaseUrl, _authToken);
+                MessageBox.Show("Visit saved successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                ClearVisitForm();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving visit: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /* ------------------  UI HELPERS  ------------------ */
         private void ClearRegistrationForm()
         {
             TxtPatientName.Clear();
@@ -212,74 +218,22 @@ namespace WPF
 
         private void UpdatePatientList()
         {
-            var searchText = TxtPatientSearch.Text?.ToLower() ?? "";
+            var search = TxtPatientSearch.Text?.ToLower() ?? "";
             var filtered = _allPatients.Where(p =>
-                string.IsNullOrWhiteSpace(searchText) ||
-                p.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                p.PhoneNumber?.Contains(searchText, StringComparison.OrdinalIgnoreCase) == true).ToList();
-
+                string.IsNullOrWhiteSpace(search) ||
+                p.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                p.PhoneNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) == true).ToList();
             PatientListBox.ItemsSource = filtered.OrderBy(p => p.Name);
         }
 
-        private void OnSelectedPatientChanged(object sender, PropertyChangedEventArgs e)
+        private void UpdatePanel(Border panel, bool visible)
         {
-            if (e.PropertyName == nameof(MainViewModel.SelectedPatient) && _viewModel.SelectedPatient != null)
-            {
-                IsRightPanelVisible = true;
-                UpdateSelectedPatientInfo(_viewModel.SelectedPatient);
-            }
+            if (panel != null) panel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void UpdateSelectedPatientInfo(Patient patient)
-        {
-            if (patient == null) return;
-
-            SelectedPatientBorder.Visibility = Visibility.Visible;
-            SelectedPatientInfo.Text = patient.Name;
-            SelectedPatientDetails.Text =
-                $"Age: {AgeCalculator.FromDateOfBirth(patient.DateOfBirth)} | Gender: {patient.Sex} | Contact: {patient.PhoneNumber}";
-        }
-
-        private void UpdatePanelVisibility()
-        {
-            if (FindName("LeftPanelBorder") is UIElement left) left.Visibility = IsLeftPanelVisible ? Visibility.Visible : Visibility.Collapsed;
-            if (FindName("RightPanelBorder") is UIElement right) right.Visibility = IsRightPanelVisible ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        /* ---- Missing handlers wired by XAML ---- */
-        private void CloseRightPanelButton_Click(object sender, RoutedEventArgs e) =>
-            IsRightPanelVisible = false;
-
-        private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            // optional scroll-speed tweak
-        }
-
-        private void TestConnectionButton_Click(object sender, RoutedEventArgs e)
-        {
-            // ping API & show result
-        }
-
-        private void TxtPatientSearch_TextChanged(object sender, TextChangedEventArgs e) =>
-            UpdatePatientList();
-
-        private void AddNewPatientButton_Click(object sender, RoutedEventArgs e) =>
-            IsLeftPanelVisible = true;
-
-        private void CloseLeftPanelButton_Click(object sender, RoutedEventArgs e) =>
-            IsLeftPanelVisible = false;
-
-        private void CancelRegisterButton_Click(object sender, RoutedEventArgs e)
-        {
-            ClearRegistrationForm();
-            IsLeftPanelVisible = false;
-        }
-
-        /* =========================================================
-         * 5. PROPERTY CHANGED
-         * =======================================================*/
+        /* ------------------  PROPERTY CHANGED  ------------------ */
         public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
